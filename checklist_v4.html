@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학업성적관리 평가 점검 시스템</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* HP-inspired palette */
+  --blue:#024ad8;--blue-bright:#296ef9;--blue-deep:#0e3191;--blue-soft:#c9e0fc;
+  --canvas:#ffffff;--cloud:#f7f7f7;--fog:#e8e8e8;--steel:#c2c2c2;
+  --ink:#1a1a1a;--ink2:#444;--ink3:#767676;
+  --coral:#ff5050;--bloom:#f9d4d2;--storm:#356373;--storm-mist:#8ebdce;
+  --green:#16803c;--green-bg:#dcfce7;--green-border:#86efac;
+  --red:#c0392b;--red-bg:#fee2e2;--red-border:#fca5a5;
+  --r:4px;--r-md:8px;--r-lg:12px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+  --shadow:0 2px 8px rgba(0,0,0,.10);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.13);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100vh}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--cloud);color:var(--ink);font-size:15px;line-height:1.6}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:var(--steel);border-radius:3px}
+button,input,textarea,select{font-family:inherit}
+
+/* ── 공통 버튼 ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:var(--r);border:2px solid var(--steel);background:var(--canvas);color:var(--ink2);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.01em}
+.btn:hover{border-color:var(--blue);color:var(--blue);background:var(--canvas)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{background:var(--blue-deep);border-color:var(--blue-deep)}
+.btn.ghost{border:none;background:transparent;color:var(--ink3);padding:8px 12px}
+.btn.ghost:hover{color:var(--ink);background:var(--cloud)}
+.btn.outline-blue{border-color:var(--blue);color:var(--blue);background:transparent}
+.btn.outline-blue:hover{background:var(--blue-soft)}
+
+/* ── 번호 뱃지 (사각형) ── */
+.num-badge{width:28px;height:28px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;border:2px solid}
+.num-badge.teal{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.num-badge.purple{background:var(--blue-soft);color:var(--blue-deep);border-color:var(--blue)}
+
+/* ── 판정 버튼 ── */
+.jbtn{padding:8px 16px;border-radius:var(--r);border:2px solid var(--steel);background:var(--canvas);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;white-space:nowrap;letter-spacing:-.01em;min-width:90px;text-align:center}
+.jbtn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+.jbtn.ok{border-color:var(--green-border);color:var(--green);background:var(--green-bg)}
+.jbtn.req{border-color:var(--red-border);color:var(--red);background:var(--red-bg)}
+.jbtn.sel-ok{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 2px 8px rgba(22,128,60,.3)}
+.jbtn.sel-req{background:var(--red);color:#fff;border-color:var(--red);box-shadow:0 2px 8px rgba(192,57,43,.3)}
+
+/* ── 뱃지 ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--r);font-size:12px;font-weight:700;border:1.5px solid transparent}
+.badge.ok{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.badge.req{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.badge.none{background:var(--fog);color:var(--ink3);border-color:var(--steel)}
+
+/* ── 로딩 ── */
+#loading{position:fixed;inset:0;background:var(--canvas);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9999}
+.spin{width:36px;height:36px;border:3px solid var(--fog);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══════════ 관리자 로그인 ══════════ */
+#admin-login{display:none;position:fixed;inset:0;background:rgba(10,20,50,.6);z-index:8000;align-items:center;justify-content:center}
+.login-card{background:var(--canvas);border-radius:var(--r-lg);padding:40px 44px;width:380px;box-shadow:var(--shadow-lg)}
+.login-card h2{font-size:20px;font-weight:700;margin-bottom:4px}
+.login-card p{font-size:14px;color:var(--ink3);margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{font-size:17px;font-weight:700;color:var(--ink2);display:block;margin-bottom:7px;letter-spacing:.02em}
+.field input,.field select{width:100%;padding:13px 16px;border:2px solid var(--steel);border-radius:var(--r-md);font-size:18.5px;color:var(--ink);outline:none;transition:border-color .15s;background:var(--canvas)}
+.field input:focus,.field select:focus{border-color:var(--blue)}
+.login-err{font-size:13px;color:var(--red);margin-bottom:12px;display:none}
+
+/* ══════════ 관리자 홈 ══════════ */
+#admin-home{display:none;min-height:100vh}
+.admin-hd{background:var(--blue-deep);color:#fff;padding:24px 44px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.admin-hd h1{font-size:29px;font-weight:700;letter-spacing:-.01em}
+.admin-hd p{font-size:17px;opacity:.75;margin-top:4px}
+
+.admin-kpi{display:grid;grid-template-columns:repeat(4,1fr);background:var(--canvas);border-bottom:2px solid var(--fog)}
+.kpi{padding:24px 32px;border-right:1px solid var(--fog)}
+.kpi:last-child{border-right:none}
+.kpi .k-lbl{font-size:15px;font-weight:700;color:var(--ink3);letter-spacing:.03em;margin-bottom:8px}
+.kpi .k-val{font-size:45px;font-weight:700;line-height:1}
+.kpi .k-sub{font-size:17px;color:var(--ink3);margin-top:5px}
+
+.admin-body{padding:28px 44px}
+.region-chips{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.chip{padding:8px 20px;border-radius:999px;border:1.5px solid var(--steel);background:var(--canvas);font-size:17.5px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink2)}
+.chip:hover,.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.adm-tbl-wrap{overflow-x:auto;border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.adm-tbl{width:100%;border-collapse:collapse;background:var(--canvas)}
+.adm-tbl thead tr{background:var(--blue-deep)}
+.adm-tbl th{padding:15px 18px;text-align:center;font-size:17px;font-weight:700;color:#fff;white-space:nowrap}
+.adm-tbl td{padding:14px 18px;border-bottom:1px solid var(--fog);font-size:16px;vertical-align:middle;text-align:center}
+.adm-tbl td:nth-child(2){text-align:left;font-size:18px;font-weight:600}
+.adm-tbl tbody tr:hover td{background:var(--cloud);cursor:pointer}
+.adm-tbl tr:last-child td{border-bottom:none}
+.adm-tbl tbody tr:hover td{background:var(--cloud);cursor:pointer}
+.prog-bar{width:80px;height:5px;background:var(--fog);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle}
+.prog-bar-fill{height:100%;background:var(--blue);border-radius:3px}
+
+/* ══════════ 진입 화면 ══════════ */
+#entry-screen{display:none;min-height:100vh;background:var(--cloud)}
+.entry-wrap{height:calc(100vh - 115px);display:flex;align-items:center;justify-content:center;padding:20px}
+.entry-card{background:var(--canvas);border-radius:var(--r-lg);padding:48px 56px;width:560px;box-shadow:var(--shadow-lg)}
+.entry-card .logo{font-size:14px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
+.entry-card h2{font-size:30px;font-weight:700;letter-spacing:-.02em;margin-bottom:8px}
+.entry-card p{font-size:16px;color:var(--ink3);margin-bottom:28px;line-height:1.6}
+.entry-divider{text-align:center;color:var(--ink3);font-size:12px;margin:20px 0;position:relative}
+.entry-divider::before{content:'';position:absolute;left:0;top:50%;width:100%;height:1px;background:var(--fog)}
+.entry-divider span{background:var(--canvas);padding:0 14px;position:relative}
+
+/* ══════════ 점검 화면 ══════════ */
+#check{display:none;min-height:100vh}
+
+.inspector-bar{background:var(--blue-deep);color:rgba(255,255,255,.85);padding:8px 44px;display:flex;align-items:center;gap:28px;font-size:13px;flex-wrap:wrap}
+.ibar-sep{color:rgba(255,255,255,.3)}
+.ibar-item{display:flex;align-items:center;gap:7px}
+.ibar-lbl{font-weight:700;opacity:.6;font-size:11px;letter-spacing:.07em;text-transform:uppercase}
+.ibar-val{font-weight:600}
+.ibar-edit{font-size:12px;color:rgba(255,255,255,.6);cursor:pointer;text-decoration:underline;margin-left:auto}
+.ibar-edit:hover{color:#fff}
+
+.check-hd{background:var(--canvas);border-bottom:2px solid var(--fog);padding:20px 44px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:16px;box-shadow:var(--shadow-sm)}
+.check-hd-l{display:flex;align-items:center;gap:16px;min-width:0;flex:1}
+.back-btn{width:36px;height:36px;border-radius:var(--r);background:var(--cloud);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--ink3);transition:all .15s;flex-shrink:0}
+.back-btn:hover{background:var(--fog);color:var(--ink)}
+.ck-school{font-size:28px;font-weight:700;letter-spacing:-.01em}
+.ck-sub{font-size:18px;color:var(--ink3);margin-top:2px}
+.check-hd-r{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.hd-prog{width:140px}
+.hd-bar{height:6px;background:var(--fog);border-radius:3px;overflow:hidden}
+.hd-bar-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
+.hd-pct{font-size:12px;color:var(--ink3);text-align:right;margin-top:4px;font-weight:600}
+
+/* 탭 */
+.tab-bar{background:var(--canvas);border-bottom:2px solid var(--fog);padding:0 44px;display:flex;position:sticky;top:77px;z-index:99;overflow-x:auto}
+.tab{padding:15px 24px;font-size:17px;font-weight:600;color:var(--ink3);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s;letter-spacing:.01em}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+.check-body{padding:28px 44px;width:100%}
+
+/* 통계 카드 */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-bottom:28px;background:var(--fog);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.stat-card{background:var(--canvas);padding:22px 26px}
+.stat-card .s-lbl{font-size:18px;font-weight:700;color:var(--ink3);letter-spacing:.01em;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.stat-card .s-val{font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1}
+.stat-card .s-unit{font-size:14px;color:var(--ink3);margin-top:4px}
+
+/* 섹션 카드 */
+.sec-card{background:var(--canvas);border:none;border-radius:var(--r-lg);margin-bottom:12px;box-shadow:var(--shadow-sm);overflow:hidden;transition:box-shadow .2s}
+.sec-card:hover{box-shadow:var(--shadow)}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 26px;cursor:pointer;user-select:none;transition:background .1s;gap:12px;border-left:4px solid transparent}
+.sec-hd.teal{border-left-color:var(--green)}
+.sec-hd.purple{border-left-color:var(--blue)}
+.sec-hd:hover{background:var(--cloud)}
+.sec-hd-l{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.sec-ttl{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.sec-hd-r{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sec-mini{display:flex;gap:6px}
+.sec-cnt{font-size:18px;color:var(--ink3);font-weight:600}
+.chev{font-size:12px;color:var(--ink3);transition:transform .2s;padding:4px 8px;border-radius:var(--r)}
+.chev.open{transform:rotate(180deg)}
+
+.sec-body{display:none;border-top:2px solid var(--fog)}
+.sec-body.open{display:block}
+
+/* 점검 아이템 */
+.ci{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid var(--fog);transition:background .1s}
+.ci:last-child{border-bottom:none}
+.ci:hover{background:var(--cloud)}
+.ci-left{display:flex;align-items:flex-start;gap:14px;padding:16px 26px;cursor:pointer;flex:1;min-width:0}
+.cb{width:22px;height:22px;border-radius:var(--r);flex-shrink:0;margin-top:2px;border:2px solid var(--steel);background:var(--canvas);display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cb.on{background:var(--blue);border-color:var(--blue)}
+.cb.on::after{content:'✓';font-size:13px;color:#fff;font-weight:700;line-height:1}
+.ci-content{flex:1;min-width:0}
+.ci-text{font-size:18px;line-height:1.65;font-weight:500;color:var(--ink)}
+.ci-text.done{color:var(--ink3);text-decoration:line-through}
+
+/* 참고 설명 — 가독성 개선 */
+.ci-note{
+  font-size:16.5px;line-height:1.65;
+  margin-top:10px;padding:11px 16px;
+  border-radius:var(--r-md);
+  border-left:4px solid var(--blue);
+  background:#e8f0fe;
+  color:#1a3a6e;
+  font-weight:500;
+}
+.ci-note.warn{
+  border-left-color:#d97706;
+  background:#fffbeb;
+  color:#78350f;
+}
+/* 구조화 노트 — 2열 표 */
+.note-table{width:100%;border-collapse:collapse;margin-top:2px}
+.note-table td{padding:6px 12px;border:1px solid rgba(30,58,110,.18);font-size:16px;line-height:1.6;vertical-align:top}
+.note-table td:first-child{background:rgba(30,58,110,.07);font-weight:700;white-space:nowrap;width:28px;text-align:center;color:#0e3191}
+/* 구조화 노트 — 분류 목록 */
+.note-cat{margin-top:2px}
+.note-cat-row{display:flex;gap:0;border-bottom:1px solid rgba(30,58,110,.12);padding:5px 0}
+.note-cat-row:last-child{border-bottom:none}
+.note-cat-label{font-weight:700;color:#0e3191;flex-shrink:0;min-width:90px;font-size:15.5px}
+.note-cat-items{font-size:15.5px;line-height:1.65;color:#1a3a6e}
+
+/* 판정 버튼 영역 */
+.ci-judge{display:flex;align-items:center;gap:8px;padding:16px 22px 16px 0;flex-shrink:0}
+
+/* 섹션 의견 */
+.sec-opinion{padding:20px 26px;background:var(--cloud);border-top:1px solid var(--fog)}
+.sec-opinion-label{font-size:18px;font-weight:700;color:var(--ink2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.opinion-ta{width:100%;min-height:96px;padding:13px 16px;border:2px solid var(--steel);border-radius:var(--r-md);font-size:16px;color:var(--ink);background:var(--canvas);resize:vertical;outline:none;line-height:1.7;transition:border-color .15s}
+.opinion-ta:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,74,216,.1)}
+.opinion-ta::placeholder{color:var(--steel)}
+.save-st{font-size:14px;color:var(--ink3);text-align:right;margin-top:6px}
+
+/* ── 검토 의견서 ── */
+.opinion-report{background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px}
+.op-report-hd{background:var(--blue-deep);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between}
+.op-report-hd h3{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.op-report-hd p{font-size:14px;opacity:.7;margin-top:2px}
+
+/* 통합 의견서 테이블 */
+.opinion-tbl{width:100%;border-collapse:collapse}
+.opinion-tbl th{background:var(--blue-deep);color:#fff;padding:14px 18px;font-size:16px;font-weight:700;text-align:left;white-space:nowrap}
+.opinion-tbl th.center{text-align:center}
+.opinion-tbl .sec-group-row td{background:#1e3a6e;color:#fff;font-size:16px;font-weight:700;padding:12px 18px}
+.opinion-tbl .opinion-row td{padding:16px 18px;border-bottom:1px solid var(--fog);vertical-align:top}
+.opinion-tbl .opinion-row:last-child td{border-bottom:none}
+.opinion-tbl .opinion-row:hover td{background:var(--cloud)}
+.opinion-tbl .req-items-row td{background:#fff8f8;padding:12px 18px 16px;border-bottom:1px solid var(--fog)}
+.op-sec-name{font-size:15px;font-weight:700;color:var(--ink2);white-space:normal;word-break:keep-all}
+.op-judge-cell{text-align:center;min-width:90px;white-space:nowrap}
+.op-opinion-text{font-size:15px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
+.op-opinion-empty{font-size:14px;color:var(--ink3);font-style:italic}
+.op-req-label{font-size:13px;font-weight:700;color:var(--red);letter-spacing:.05em;margin-bottom:8px}
+.op-req-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px dashed var(--red-border);font-size:15px;align-items:flex-start;line-height:1.55}
+.op-req-row:last-child{border-bottom:none}
+
+/* 종합 결과 테이블 */
+.result-tbl{width:100%;border-collapse:collapse;background:var(--canvas);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.result-tbl thead tr{background:var(--blue-deep)}
+.result-tbl th{padding:14px 18px;text-align:left;font-size:17.5px;font-weight:700;color:#fff;white-space:nowrap}
+.result-tbl th.center{text-align:center}
+.result-tbl td{padding:12px 18px;border-bottom:1px solid var(--fog);font-size:15px;vertical-align:middle}
+.result-tbl td.center{text-align:center}
+.result-tbl tr:last-child td{border-bottom:none}
+.result-tbl tr:hover td{background:var(--cloud)}
+.result-tbl .group-row td{background:#1e3a6e;color:#fff;font-size:14.5px;font-weight:700;padding:10px 18px;letter-spacing:.01em}
+
+/* 수정 요청 요약 박스 */
+.req-summary{background:var(--red-bg);border:2px solid var(--red-border);border-radius:var(--r-lg);padding:22px 28px;margin-bottom:22px}
+.req-summary-hd{font-size:15px;font-weight:700;color:var(--red);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.req-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px dashed var(--red-border);font-size:14px}
+.req-item:last-child{border-bottom:none}
+.req-num{color:var(--red);font-weight:700;flex-shrink:0;font-size:13px;margin-top:1px}
+
+/* 관리자 상세 모달 */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,20,50,.6);z-index:7000;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto}
+.modal-card{background:var(--canvas);border-radius:var(--r-lg);width:min(960px,95vw);padding:36px 40px;box-shadow:var(--shadow-lg);margin-bottom:40px}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid var(--fog)}
+.modal-hd h2{font-size:20px;font-weight:700}
+.modal-close{width:34px;height:34px;border-radius:var(--r);background:var(--cloud);border:none;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink3);transition:all .15s}
+.modal-close:hover{background:var(--fog);color:var(--ink)}
+
+/* 관리자 탭 */
+.adm-tab{padding:12px 22px;font-size:16px;font-weight:600;color:var(--ink3);background:transparent;border:none;border-bottom:3px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap}
+.adm-tab:hover{color:var(--ink)}
+.adm-tab.on{color:var(--purple);border-bottom-color:var(--purple)}
+
+/* 배정표 */
+.assign-tbl{width:100%;border-collapse:collapse;background:var(--canvas);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow)}
+.assign-tbl th{background:var(--blue-deep);color:#fff;padding:13px 16px;font-size:16.5px;font-weight:700;text-align:center;white-space:nowrap}
+.assign-tbl td{padding:12px 16px;border-bottom:1px solid var(--fog);font-size:15px;vertical-align:middle;text-align:center}
+.assign-tbl tr:last-child td{border-bottom:none}
+.assign-tbl tr:hover td{background:var(--cloud)}
+.assign-tbl td:nth-child(2){text-align:left;font-weight:600;font-size:16px}
+.assign-tbl td:nth-child(3){font-weight:700;font-size:16px}
+/* 배정학교 그리드 - 균등 정렬 */
+.school-grid-wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;text-align:center}
+.school-chip{display:block;padding:5px 8px;border-radius:var(--r-sm);font-size:16px;font-weight:500;word-break:keep-all;line-height:1.45;text-align:center}
+.school-chip.empty{background:transparent;border:none}
+.school-chip.normal{background:var(--cloud);color:var(--ink2);border:1px solid var(--fog)}
+.school-chip.jonghap{background:#f4cccc;color:#7f2c2c;border:1px solid #e8a0a0}
+.school-chip.voc{background:#fef9c3;color:#854d0e;border:1px solid #fde047}
+/* 교차검토 뱃지 */
+.group-badge{background:var(--blue-soft);color:var(--blue-deep);padding:4px 12px;border-radius:99px;font-size:15px;font-weight:700;white-space:nowrap}
+
+/* 2차 검토 */
+.review2-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.review2-panel{background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden}
+.review2-panel-hd{padding:14px 20px;font-size:15px;font-weight:700;border-bottom:2px solid var(--fog)}
+.review2-panel-hd.first{background:var(--blue-deep);color:#fff}
+.review2-panel-hd.second{background:#4a3f8c;color:#fff}
+.review2-sec{padding:16px 20px;border-bottom:1px solid var(--fog)}
+.review2-sec:last-child{border-bottom:none}
+.review2-sec-title{font-size:13px;font-weight:700;color:var(--ink3);letter-spacing:.04em;margin-bottom:8px}
+.review2-text{font-size:15px;color:var(--ink);line-height:1.75;white-space:pre-wrap}
+.review2-empty{font-size:14px;color:var(--ink3);font-style:italic}
+.review2-ta{width:100%;min-height:90px;padding:11px 14px;border:2px solid var(--steel);border-radius:var(--r-sm);font-size:15px;color:var(--ink);background:var(--canvas);resize:vertical;outline:none;line-height:1.7;font-family:inherit;transition:border-color .15s}
+.review2-ta:focus{border-color:#4a3f8c;box-shadow:0 0 0 3px rgba(74,63,140,.1)}
+.review2-save-st{font-size:12px;color:var(--ink3);text-align:right;margin-top:5px}
+/* 과목별 검토 의견 */
+.subject-opinion-wrap{background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-top:20px}
+.subject-opinion-hd{background:#1e3a6e;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.subject-opinion-hd h3{font-size:20px;font-weight:700}
+.subject-opinion-hd p{font-size:16.5px;opacity:.75;margin-top:2px}
+.subject-add-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.4);border-radius:var(--r-sm);font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s}
+.subject-add-btn:hover{background:rgba(255,255,255,.28)}
+.subject-list{padding:0}
+.subject-item{border-bottom:1px solid var(--fog);padding:18px 24px}
+.subject-item:last-child{border-bottom:none}
+.subject-item-hd{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.subject-name-input{flex:1;padding:8px 12px;border:2px solid var(--steel);border-radius:var(--r-sm);font-size:16px;font-weight:600;color:var(--ink);outline:none;font-family:inherit;transition:border-color .15s;max-width:220px}
+.subject-name-input:focus{border-color:var(--blue)}
+.subject-del-btn{width:28px;height:28px;border-radius:50%;background:var(--red-bg);border:1.5px solid var(--red-border);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;transition:all .15s}
+.subject-del-btn:hover{background:var(--red);color:#fff}
+.subject-ta{width:100%;min-height:88px;padding:11px 14px;border:2px solid var(--steel);border-radius:var(--r-sm);font-size:16.5px;color:var(--ink);background:var(--canvas);resize:vertical;outline:none;line-height:1.7;font-family:inherit;transition:border-color .15s}
+.subject-ta:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(2,74,216,.08)}
+.subject-ta::placeholder{color:var(--steel)}
+.subject-save-st{font-size:14px;color:var(--ink3);text-align:right;margin-top:5px}
+
+.err-banner{background:var(--bloom);border:2px solid var(--red-border);border-radius:var(--r-md);padding:12px 18px;font-size:14px;color:var(--red);margin-bottom:20px;display:none}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 22px;border-radius:var(--r-md);font-size:14px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9999;box-shadow:var(--shadow-lg)}
+.toast.show{opacity:1}
+
+@media(max-width:960px){
+  .admin-hd,.admin-body,.check-body,.tab-bar,.inspector-bar,.check-hd{padding-left:16px;padding-right:16px}
+  .admin-kpi{grid-template-columns:repeat(2,1fr)}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .ci{grid-template-columns:1fr}
+  .ci-judge{padding:0 20px 14px;justify-content:flex-end}
+  .op-item{grid-template-columns:1fr}
+  .op-item-sec,.op-item-judge{border-right:none;border-bottom:1px solid var(--fog)}
+}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spin"></div><div style="font-size:14px;color:var(--ink3);font-weight:500">데이터를 불러오는 중...</div></div>
+
+<!-- 관리자 로그인 -->
+<div id="admin-login" style="display:none;position:fixed;inset:0;background:rgba(10,20,50,.6);z-index:8000;align-items:center;justify-content:center">
+  <div class="login-card">
+    <h2 style="font-size:22px;font-weight:700;margin-bottom:4px">관리자 로그인</h2>
+    <p style="font-size:14px;color:var(--ink3);margin-bottom:28px">전체 점검 현황 조회는 관리자 인증이 필요합니다</p>
+    <div class="field"><label>비밀번호</label><input type="password" id="admin-pw-input" placeholder="비밀번호 입력" onkeydown="if(event.key==='Enter')tryAdminLogin()"></div>
+    <div class="login-err" id="login-err">비밀번호가 올바르지 않습니다</div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn primary" onclick="tryAdminLogin()" style="flex:1;justify-content:center">로그인</button>
+      <button class="btn" onclick="closeAdminLogin()">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 홈 -->
+<div id="admin-home">
+  <div class="admin-hd">
+    <div><h1>전체 점검 현황</h1><p>2026학년도 충청남도 학생평가 점검 시스템</p></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)" onclick="loadAll(true)">새로고침</button>
+      <button class="btn" style="background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.25)" onclick="exitAdmin()">← 점검자 화면</button>
+    </div>
+  </div>
+  <div class="admin-kpi">
+    <div class="kpi"><div class="k-lbl">전체 학교</div><div class="k-val" id="adm-total">0</div><div class="k-sub">개교</div></div>
+    <div class="kpi"><div class="k-lbl">점검 완료</div><div class="k-val" id="adm-done" style="color:var(--green)">0</div><div class="k-sub">100% 완료</div></div>
+    <div class="kpi"><div class="k-lbl">점검 중</div><div class="k-val" id="adm-ing" style="color:#d97706">0</div><div class="k-sub">진행 중</div></div>
+    <div class="kpi"><div class="k-lbl">수정 요청</div><div class="k-val" id="adm-req" style="color:var(--red)">0</div><div class="k-sub">누적 건수</div></div>
+  </div>
+  <div class="admin-body">
+    <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:2px solid var(--fog);padding-bottom:0">
+      <button class="adm-tab on" id="admtab-dashboard" onclick="switchAdminTab('dashboard')">전체 현황</button>
+      <button class="adm-tab" id="admtab-assign" onclick="switchAdminTab('assign')">점검단 배정표</button>
+      <button class="adm-tab" id="admtab-review2" onclick="switchAdminTab('review2')">2차 검토</button>
+    </div>
+    <!-- 전체 현황 -->
+    <div id="admcontent-dashboard">
+    <div class="region-chips" id="region-chips">
+      <button class="chip on" onclick="setFilter(this,'all')">전체</button>
+      <button class="chip" onclick="setFilter(this,'천안')">천안</button>
+      <button class="chip" onclick="setFilter(this,'공주')">공주</button>
+      <button class="chip" onclick="setFilter(this,'보령')">보령</button>
+      <button class="chip" onclick="setFilter(this,'아산')">아산</button>
+      <button class="chip" onclick="setFilter(this,'서산')">서산</button>
+      <button class="chip" onclick="setFilter(this,'논산·계룡')">논산·계룡</button>
+      <button class="chip" onclick="setFilter(this,'당진')">당진</button>
+      <button class="chip" onclick="setFilter(this,'금산')">금산</button>
+      <button class="chip" onclick="setFilter(this,'부여')">부여</button>
+      <button class="chip" onclick="setFilter(this,'서천')">서천</button>
+      <button class="chip" onclick="setFilter(this,'청양')">청양</button>
+      <button class="chip" onclick="setFilter(this,'홍성')">홍성</button>
+      <button class="chip" onclick="setFilter(this,'예산')">예산</button>
+      <button class="chip" onclick="setFilter(this,'태안')">태안</button>
+    </div>
+    <div class="adm-tbl-wrap">
+      <table class="adm-tbl">
+        <thead><tr><th>지역</th><th>학교명</th><th>점검자</th><th>점검일시</th><th>진행률</th><th>적합</th><th>수정 요청</th><th></th></tr></thead>
+        <tbody id="adm-tbody"></tbody>
+      </table>
+    </div>
+    </div><!-- end admcontent-dashboard -->
+
+    <!-- 배정표 -->
+    <div id="admcontent-assign" style="display:none">
+      <div id="assign-table-wrap"></div>
+    </div>
+
+    <!-- 2차 검토 -->
+    <div id="admcontent-review2" style="display:none">
+      <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+        <label style="font-size:15px;font-weight:600;color:var(--ink2)">학교 선택:</label>
+        <select id="review2-school-sel" onchange="loadReview2()" style="padding:9px 14px;border:2px solid var(--steel);border-radius:var(--r-md);font-size:15px;color:var(--ink);outline:none;min-width:260px">
+          <option value="">— 학교를 선택하세요 —</option>
+        </select>
+      </div>
+      <div id="review2-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 상세 모달 -->
+<div id="modal-overlay" style="display:none">
+  <div class="modal-card">
+    <div class="modal-hd"><h2 id="modal-title"></h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- 진입 화면 -->
+<div id="entry-screen">
+  <!-- 진입 화면 상단 헤더 -->
+  <div style="background:var(--blue-deep);color:#fff;padding:18px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.08em;opacity:.7;margin-bottom:4px">CHUNGNAM EDU · 2026</div>
+      <div style="font-size:20px;font-weight:700">충청남도 학생평가 점검 시스템</div>
+    </div>
+    <style>
+    @keyframes neon-border{0%,100%{box-shadow:0 0 6px #ffd700,0 0 14px #ffd700,0 0 28px rgba(255,215,0,.35)}50%{box-shadow:0 0 10px #ffd700,0 0 24px #ffd700,0 0 48px rgba(255,215,0,.55)}}
+    .neon-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:transparent;color:#fff;border:1.5px solid #ffd700;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.04em;animation:neon-border 2.5s ease-in-out infinite;text-shadow:0 0 6px rgba(255,215,0,.5);transition:background .2s}
+    .neon-btn:hover{background:rgba(255,215,0,.08)}
+    </style>
+    <button class="neon-btn" onclick="showAdminLogin()">&#128274; 관리자 로그인</button>
+  </div>
+
+  <!-- 탭 -->
+  <div style="background:var(--canvas);border-bottom:2px solid var(--fog);padding:0 40px;display:flex">
+    <button class="adm-tab on" id="etab-start" onclick="switchEntryTab('start')" style="font-size:16px;padding:14px 24px">점검 시작</button>
+    <button class="adm-tab" id="etab-assign" onclick="switchEntryTab('assign')" style="font-size:16px;padding:14px 24px">점검단 배정표</button>
+  </div>
+
+  <!-- 점검 시작 탭 -->
+  <div id="etab-content-start">
+    <div class="entry-wrap">
+    <div class="entry-card">
+      <h2>점검자 로그인</h2>
+      <p>성명을 입력하면 배정된 학교가 자동으로 표시됩니다.<br>이전에 저장된 내용이 있으면 자동으로 불러옵니다.</p>
+      <div class="field"><label>점검자 성명</label><input type="text" id="entry-name" placeholder="성명을 입력하세요" oninput="filterSchoolsByName()"></div>
+      <div class="field">
+        <label>점검 대상 학교</label>
+        <select id="entry-school" onchange="onSchoolChange()"><option value="">— 학교를 선택하세요 —</option></select>
+      </div>
+      <div id="entry-preview" style="display:none;background:#f0f5ff;border:1.5px solid var(--blue-soft);border-radius:var(--r-md);padding:14px 18px;margin-bottom:16px;font-size:14px">
+        <div style="font-weight:700;color:var(--blue-deep);margin-bottom:8px;font-size:15px">📂 이전 점검 기록 있음</div>
+        <div id="entry-preview-content" style="color:var(--ink2);line-height:1.9"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" style="font-size:13px;padding:6px 14px" onclick="useExistingDate()">이전 날짜 유지하고 이어서 점검</button>
+          <button class="btn" style="font-size:13px;padding:6px 14px;color:var(--blue);border-color:var(--blue)" onclick="useTodayDate()">오늘 날짜로 업데이트하고 이어서 점검</button>
+        </div>
+      </div>
+      <div id="entry-date-wrap">
+        <div class="field"><label>점검 일시</label><input type="text" id="entry-date" placeholder="예) 2026.05.13"></div>
+        <button class="btn primary" style="width:100%;justify-content:center;padding:14px;font-size:16px;border-radius:var(--r-md)" onclick="startCheck()">점검 시작 →</button>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 배정표 탭 -->
+  <div id="etab-content-assign" style="display:none;padding:28px 40px">
+    <div id="entry-assign-wrap"></div>
+  </div>
+</div>
+
+<!-- 점검 화면 -->
+<div id="check">
+  <div class="inspector-bar" id="inspector-bar">
+    <div class="ibar-item"><span class="ibar-lbl">점검자</span><span class="ibar-val" id="ibar-name">—</span></div>
+    <span class="ibar-sep">|</span>
+    <div class="ibar-item"><span class="ibar-lbl">학교</span><span class="ibar-val" id="ibar-school">—</span></div>
+    <span class="ibar-sep">|</span>
+    <div class="ibar-item"><span class="ibar-lbl">점검일시</span><span class="ibar-val" id="ibar-date">—</span></div>
+    <span class="ibar-edit" onclick="goEntry()">정보 수정</span>
+  </div>
+  <div class="check-hd">
+    <div class="check-hd-l">
+      <button class="back-btn" onclick="goEntry()">←</button>
+      <div><div class="ck-school" id="ck-name"></div><div class="ck-sub" id="ck-sub"></div></div>
+    </div>
+    <div class="check-hd-r">
+      <div class="hd-prog"><div class="hd-bar"><div class="hd-bar-fill" id="hd-fill" style="width:0%"></div></div><div class="hd-pct" id="hd-pct">0%</div></div>
+      <button class="btn ghost" onclick="resetSchool()">초기화</button>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <div class="tab on" id="tab-reg" onclick="switchTab('reg')">학업성적관리규정</div>
+    <div class="tab" id="tab-plan" onclick="switchTab('plan')">교과별 평가계획</div>
+    <div class="tab" id="tab-result" onclick="switchTab('result')">종합 결과</div>
+    <div class="tab" id="tab-opinion" onclick="switchTab('opinion')">검토 의견서</div>
+  </div>
+  <div class="check-body">
+    <div class="err-banner" id="err-banner">⚠ 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.</div>
+    <div id="pane-reg"></div>
+    <div id="pane-plan" style="display:none"></div>
+    <div id="pane-result" style="display:none"></div>
+    <div id="pane-opinion" style="display:none"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxDpgfWhTCNf8WyljOjOI35vd2byrE0jaws1JSS-YbemDDrPsP5FahBmZCfyN-J5P6P/exec";
+const ADMIN_PW = "wndemd6cmd";
+
+const SCHOOLS = ["천안제일고등학교","천안공업고등학교","천안중앙고등학교","천안여자고등학교","병천고등학교","충남관광보건고등학교","목천고등학교","충남예술고등학교","천안두정고등학교","천안월봉고등학교","천안쌍용고등학교","천안신당고등학교","천안오성고등학교","천안업성고등학교","천안청수고등학교","천안불당고등학교","천안고등학교","천안상업고등학교","복자여자고등학교","천안여자상업고등학교","북일고등학교","북일여자고등학교","공주대학교사범대학부설고등학교","공주생명과학고등학교","공주고등학교","공주여자고등학교","충남과학고등학교","공주마이스터고등학교","공주영명고등학교","공주정보고등학교","공주금성여자고등학교","한일고등학교","대천고등학교","대천여자고등학교","대천여자상업고등학교","충남해양과학고등학교","웅천고등학교","주산산업고등학교","온양고등학교","온양여자고등학교","온양용화고등학교","아산스마트팩토리마이스터고등학교","충남외국어고등학교","설화고등학교","배방고등학교","이순신고등학교","아산충무고등학교","아산고등학교","한올고등학교","충남삼성고등학교","서산중앙고등학교","서산여자고등학교","대산고등학교","서산공업고등학교","서산고등학교","부석고등학교","서령고등학교","서일고등학교","국방항공고등학교","논산고등학교","논산여자고등학교","강경상업고등학교","강경고등학교","연무마이스터고등학교","한국국제비즈니스고등학교","충남체육고등학교","논산대건고등학교","연무고등학교","건양대학교병설건양고등학교","쌘뽈여자고등학교","논산여자상업고등학교","용남고등학교","계룡고등학교","당진정보고등학교","당진고등학교","합덕제철고등학교","합덕고등학교","호서고등학교","신평고등학교","서야고등학교","송악고등학교","금산산업고등학교","금산고등학교","금산여자고등학교","금산하이텍고등학교","부여고등학교","부여여자고등학교","부여정보고등학교","한국식품마이스터고등학교","부여전자고등학교","장항공업고등학교","서천고등학교","서천여자고등학교","충남디자인예술고등학교","한국미래문화고등학교","장항고등학교","비전고등학교","청양고등학교","정산고등학교","홍성고등학교","홍성여자고등학교","충남드론항공고등학교","갈산고등학교","홍성공업고등학교","홍주고등학교","한국K-POP고등학교","서해삼육고등학교","충남반도체마이스터고등학교","예산여자고등학교","덕산고등학교","예산고등학교","예산예화여자고등학교","풀무농업고등기술학교","대흥고등학교","삽교고등학교","충남온라인학교","태안고등학교","안면고등학교","만리포고등학교","태안여자고등학교"];
+
+const REGIONS_MAP={천안:s=>["천안","병천","충남관광보건","목천","충남예술","복자여자","북일"].some(k=>s.includes(k)),공주:s=>s.includes("공주")||s==="한일고등학교"||s==="충남과학고등학교",보령:s=>s.includes("대천")||["충남해양과학","웅천","주산산업"].some(k=>s.includes(k)),아산:s=>["아산","온양","충남외국어","설화","배방","이순신","한올","충남삼성"].some(k=>s.includes(k)),서산:s=>s.includes("서산")||["대산","부석","서령","서일"].some(k=>s.includes(k)),"논산·계룡":s=>["논산","강경","연무","충남체육","건양","쌘뽈","한국국제비즈니스","용남","계룡","국방항공"].some(k=>s.includes(k)),당진:s=>["당진","합덕","호서","신평","서야","송악"].some(k=>s.includes(k)),금산:s=>s.includes("금산"),부여:s=>s.includes("부여")||s.includes("한국식품마이스터"),서천:s=>["서천","장항","충남디자인예술","한국미래문화","비전"].some(k=>s.includes(k)),청양:s=>s.includes("청양")||s==="정산고등학교",홍성:s=>["홍성","갈산","홍주","한국K-POP","서해삼육","충남드론항공","충남반도체마이스터"].some(k=>s.includes(k)),예산:s=>s.includes("예산")||["덕산","대흥","삽교","충남온라인"].some(k=>s.includes(k)),태안:s=>["태안","안면","만리포"].some(k=>s.includes(k))};
+function getRegion(s){for(const[r,fn]of Object.entries(REGIONS_MAP))if(fn(s))return r;return '기타';}
+
+// ── 학교 유형 (종합고 / 특성화고)
+// 1~21번 배정교 중 종합고만 별도 지정
+const JONGHAP = new Set([
+  "서산중앙고등학교","청양고등학교","한올고등학교","태안여자고등학교","삽교고등학교"
+]);
+// 22~28번 배정교 전체 특성화고
+const VOC_22_28 = new Set([
+  // 22 홍사랑
+  "병천고등학교","한국식품마이스터고등학교","충남관광보건고등학교","아산스마트팩토리마이스터고등학교","금산산업고등학교",
+  // 23 김찬희
+  "충남해양과학고등학교","공주생명과학고등학교","예산예화여자고등학교","풀무농업고등기술학교","서산공업고등학교",
+  // 24 박준형
+  "당진정보고등학교","홍성공업고등학교","대천여자상업고등학교","천안제일고등학교","금산하이텍고등학교",
+  // 25 황인배
+  "장항공업고등학교","천안상업고등학교","주산산업고등학교","연무마이스터고등학교","충남드론항공고등학교",
+  // 26 김설아
+  "천안공업고등학교","국방항공고등학교","한국국제비즈니스고등학교","합덕제철고등학교","부여정보고등학교",
+  // 27 양희진
+  "한국미래문화고등학교","공주정보고등학교","천안여자상업고등학교","부여전자고등학교","충남반도체마이스터고등학교",
+  // 28 한혜윤
+  "강경상업고등학교","논산여자상업고등학교","한국K-POP고등학교","공주마이스터고등학교"
+]);
+function getSchoolType(s,assignerNo){
+  // 22번 이상 배정자는 배정교 전체 특성화
+  if(assignerNo&&assignerNo>=22) return 'voc';
+  if(JONGHAP.has(s)) return 'jonghap';
+  if(VOC_22_28.has(s)) return 'voc'; // 혹시 다른 곳에 쓰일 경우 대비
+  return 'normal';
+}
+
+// ── 점검단 배정표 (순번·이름·소속·배정교·교차검토그룹만 포함)
+const ASSIGNMENTS = [
+  {no:1,  name:'노슬기', school:'부여고등학교',          group:1,  assigned:['서산중앙고등학교','충남삼성고등학교','서산고등학교','합덕고등학교','서해삼육고등학교']},
+  {no:2,  name:'박지희', school:'계룡고등학교',          group:1,  assigned:['당진고등학교','천안중앙고등학교','강경고등학교','웅천고등학교']},
+  {no:3,  name:'박은정', school:'논산고등학교',          group:2,  assigned:['청양고등학교','충남온라인학교','북일여자고등학교','만리포고등학교']},
+  {no:4,  name:'이선영', school:'태안고등학교',          group:2,  assigned:['아산고등학교','금산고등학교','대산고등학교','홍성여자고등학교']},
+  {no:5,  name:'김민정', school:'홍성여자고등학교',      group:3,  assigned:['공주여자고등학교','건양대학교병설건양고등학교','용남고등학교','쌘뽈여자고등학교','덕산고등학교']},
+  {no:6,  name:'박은주', school:'천안불당고등학교',      group:3,  assigned:['한올고등학교','공주고등학교','대천고등학교','서령고등학교']},
+  {no:7,  name:'이국희', school:'한올고등학교',          group:4,  assigned:['안면고등학교','천안업성고등학교','천안신당고등학교','논산여자고등학교']},
+  {no:8,  name:'이윤재', school:'천안오성고등학교',      group:4,  assigned:['북일고등학교','논산대건고등학교','서산여자고등학교','충남디자인예술고등학교']},
+  {no:9,  name:'한송이', school:'온양고등학교',          group:5,  assigned:['공주대학교사범대학부설고등학교','한일고등학교','천안월봉고등학교','연무고등학교']},
+  {no:10, name:'모진미', school:'서령고등학교',          group:5,  assigned:['예산고등학교','아산충무고등학교','천안청수고등학교','부여고등학교']},
+  {no:11, name:'유지선', school:'설화고등학교',          group:6,  assigned:['태안여자고등학교','호서고등학교','홍성고등학교','대천여자고등학교']},
+  {no:12, name:'박철환', school:'공주정보고등학교',      group:6,  assigned:['충남체육고등학교','충남예술고등학교','천안고등학교','복자여자고등학교']},
+  {no:13, name:'박정화', school:'천안쌍용고등학교',      group:7,  assigned:['충남과학고등학교','이순신고등학교','송악고등학교','서천고등학교']},
+  {no:14, name:'백경자', school:'부여고등학교',          group:7,  assigned:['천안불당고등학교','온양고등학교','장항고등학교','서천여자고등학교']},
+  {no:15, name:'정재원', school:'공주영명고등학교',      group:8,  assigned:['설화고등학교','논산고등학교','태안고등학교','부여여자고등학교']},
+  {no:16, name:'배혜지', school:'배방고등학교',          group:8,  assigned:['목천고등학교','예산여자고등학교','천안두정고등학교','공주영명고등학교']},
+  {no:17, name:'임영희', school:'갈산고등학교',          group:9,  assigned:['삽교고등학교','천안오성고등학교','신평고등학교','서야고등학교']},
+  {no:18, name:'강하니', school:'건양고등학교',          group:9,  assigned:['금산여자고등학교','서일고등학교','정산고등학교','온양용화고등학교']},
+  {no:19, name:'이한웅', school:'천안중앙고등학교',      group:10, assigned:['홍주고등학교','온양여자고등학교','계룡고등학교','갈산고등학교']},
+  {no:20, name:'권성현', school:'설화고등학교',          group:10, assigned:['충남외국어고등학교','공주금성여자고등학교','배방고등학교','부석고등학교']},
+  {no:21, name:'임권우', school:'천안청수고등학교',      group:10, assigned:['천안여자고등학교','대흥고등학교','천안쌍용고등학교','비전고등학교']},
+  {no:22, name:'홍사랑', school:'공주생명과학고등학교',  group:11, assigned:['병천고등학교','한국식품마이스터고등학교','충남관광보건고등학교','아산스마트팩토리마이스터고등학교','금산산업고등학교']},
+  {no:23, name:'김찬희', school:'천안제일고등학교',      group:11, assigned:['충남해양과학고등학교','공주생명과학고등학교','예산예화여자고등학교','풀무농업고등기술학교','서산공업고등학교']},
+  {no:24, name:'박준형', school:'공주마이스터고등학교',  group:12, assigned:['당진정보고등학교','홍성공업고등학교','대천여자상업고등학교','천안제일고등학교','금산하이텍고등학교']},
+  {no:25, name:'황인배', school:'공주마이스터고등학교',  group:12, assigned:['장항공업고등학교','천안상업고등학교','주산산업고등학교','연무마이스터고등학교','충남드론항공고등학교']},
+  {no:26, name:'김설아', school:'당진정보고등학교',      group:13, assigned:['천안공업고등학교','국방항공고등학교','한국국제비즈니스고등학교','합덕제철고등학교','부여정보고등학교']},
+  {no:27, name:'양희진', school:'당진정보고등학교',      group:13, assigned:['한국미래문화고등학교','공주정보고등학교','천안여자상업고등학교','부여전자고등학교','충남반도체마이스터고등학교']},
+  {no:28, name:'한혜윤', school:'천안여자상업고등학교',  group:13, assigned:['강경상업고등학교','논산여자상업고등학교','한국K-POP고등학교','공주마이스터고등학교']},
+];
+
+// 이름으로 배정 학교 찾기
+function getAssignedSchools(name){
+  const a=ASSIGNMENTS.find(a=>a.name===name);
+  return a?a.assigned:[];
+}
+
+const DATA={
+  reg:{label:'학업성적관리규정',sections:[
+    {id:'r1',title:'용어 현행화',num:'1',items:[{id:'r1a',text:'2026학년도 시행지침 내용을 반영하여 용어 등을 현행화하였는가',note:'지필평가 → 정기시험 등 용어 변경 확인'}]},
+    {id:'r2',title:'학업성적관리위원회',num:'2',items:[
+      {id:'r2a',text:'학관위 구성·개최·심의사항에 대한 내용이 명시되어 있는가',note:''},
+      {id:'r2b',text:'부위원장 지정 여부',note:'교감(교감 미배치교일 경우 교감 외 1인) 지정 확인'},
+      {id:'r2c',text:'교직원의 자녀 또는 3촌 이내 친인척 평가 업무 배제 및 학부모위원 2인 이상 위촉',note:'교양교과(교세특 기재를 통해 평가 참여 가능)에서도 배제 적용'},
+    ]},
+    {id:'r3',title:'교과학습 평가 (정기시험 및 수행평가)',num:'3',items:[
+      {id:'r3a',text:'정기시험의 실시 횟수 명시',note:''},
+      {id:'r3b',text:'수행평가만으로 평가하는 교과, 수행평가 비중 60% 이상+서답형 비율 조정 교과 명시',note:''},
+      {id:'r3c',text:'3학년 2학기 정기시험의 서답형(서·논술형 포함) 평가 실시 여부 및 비율',note:''},
+      {id:'r3d',text:'정기시험 기출문제(정답 포함)의 공개 범위와 방법',note:''},
+      {id:'r3e',text:'고사기간 중 인쇄실 관리 담당자(교감 등) 별도 지정 여부',note:''},
+      {id:'r3f',text:'시험지 유출사고 발생 시 처리방법 마련',note:'학관위 개최, 학생·학부모 공지, 대책 등의 내용을 포함해야 함'},
+      {id:'r3g',text:'부정행위 예방 대책과 부정행위자(협조자 포함) 처리 절차 및 처리 기준 마련',note:'⚠ 감독교사의 즉시 퇴실 조치 내용은 학생 반발·민원 가능성 있음. 고사 중 소지 금지 물품·부정행위 유형·감독 및 고사실 배정 방법 등 구체적 내용 포함 필요'},
+      {id:'r3h',text:'정기시험 및 수행평가의 이의신청 절차 마련',note:''},
+      {id:'r3i',text:'수행평가 기본점수 부여 여부 및 범위 설정',note:'기본점수 부여 시 영역 만점의 40%를 초과할 수 없음'},
+      {id:'r3j',text:'수행평가 결과물(학생작품 등)의 보관기간 명시',note:''},
+      {id:'r3k',text:'신체장애 학생에 대한 규정 누락 여부 확인',note:''},
+    ]},
+    {id:'r4',title:'인정점 부여',num:'4',items:[
+      {id:'r4a',text:'정기시험 결시생의 성적 처리 규정 명시 여부',note:''},
+      {id:'r4b',text:'결시생 인정점 부여를 위한 증빙서류 명시',note:''},
+      {id:'r4c',text:'인정점 100%·80%·최하점 차하점 부여 기준의 시행지침 준수 여부',note:''},
+      {id:'r4d',text:'최하점의 차하점 명시 여부',note:'최하점-1 또는 최하점-과목별 최소배점 중 택1'},
+      {id:'r4e',text:'인정점 처리 시 확인 절차 명시',note:'예) 평가 담당 교사 → 교과 담당 교사 → 평가 담당 부장'},
+      {id:'r4f',text:'정기시험 2회 실시: 기준 점수 방식 택1 명시',note:'기준고사/영역점수, 평균점수, 평균점수 비율 중 택1'},
+      {id:'r4g',text:'정기시험 1회 또는 전체 결시: 처리 방식 택1 명시',note:'평균점수, 과목의 최하점, 학교자체인정점부여 중 택1'},
+      {id:'r4h',text:'학교자체인정점부여 시 인정점 산출 순위 및 산출식 명시',note:''},
+    ]},
+    {id:'r5',title:'평가결과 처리',num:'5',items:[
+      {id:'r5a',text:'수강자 수 산출 방법 명시',note:'동일 교과·과목, 동일 학점 수·수강시기 → 수강 전체 학생을 수강자 수로 성적 산출. 계열(학과)별 분리산출 여부 명시 확인'},
+      {id:'r5b',text:'소인수 과목(1·2학년: 5명 이하, 3학년: 13명 이하) 성적 산출 방법 명시',note:''},
+    ]},
+    {id:'r6',title:'기타 성적처리',num:'6',items:[
+      {id:'r6a',text:'학적변동학생의 성적처리 방법 마련',note:''},
+      {id:'r6b',text:'특수교육·위탁교육·소년보호기관·대안교육·온라인수업·건강장애 학생 성적 처리 방법 설정 여부',note:''},
+      {id:'r6c',text:'창체활동·행동특성 및 종합의견의 누가기록 입력 여부 및 방법 명시',note:''},
+      {id:'r6d',text:'부칙 등에 기입된 연도가 올바른가',note:''},
+    ]},
+  ]},
+  plan:{label:'교과별 평가계획',sections:[
+    {id:'p1',title:'평가계획 전반',num:'1',items:[
+      {id:'p1a',text:'학년별 적용 교육과정에 따른 용어를 알맞게 사용',note:'1·2학년: 학점, 성취수준 / 3학년: 단위, 평가기준'},
+      {id:'p1b',text:'학년·교과목별 성적처리방식을 현행 교육과정과 훈령에 따라 적용',note:'과목명, 교육과정 편제, 성취도, 등급산출 여부(성적처리 유형)를 정확하게 기재하였는지 확인'},
+      {id:'p1c',text:'교육과정 편제표에 근거하여 개설된 모든 과목의 평가 계획 수립 여부',note:'공동교육과정(학교연합·지역연계·온라인학교 포함) 및 교양교과 등'},
+      {id:'p1d',text:'시행지침 제8조 제2항의 내용 포함 여부',note:'__table__(1)|평가 목적·방향·방침·유의사항__(2)|평가 종류·방법·시기__(3)|정기시험·수행평가의 시기·영역·요소·방법·횟수·세부기준·반영비율, 결시자·학적변동자 처리 기준__(4)|기준 성취율·분할점수 산출방식·성취도·성적처리유형__(5)|성적처리 방법 및 결과 활용'},
+      {id:'p1e',text:'평가계획의 내용과 학교 학업성적관리규정과의 일치 여부',note:'__table__대표적 오류|서답형(서·논술형) 반영비율, 부정행위 유형 및 처리 기준, 기본점수 및 인정점 부여, 동점자 처리기준 등__잘못된 예 ①|학업성적관리규정상 동점자 처리기준의 방안순위는 2회고사-1회고사-수행평가 순임에도 교과 평가계획의 동점자 처리기준표에는 1회고사-2회고사-수행평가라고 작성한 경우__잘못된 예 ②|학업성적관리규정상 "수행평가에서 부정행위 발생 시 0점 처리한다"라고 명시해두었음에도 특정 교과 평가계획에는 부정행위 시 20점을 부여하겠다고 제출 → 단위학교 규정과 상충'},
+    ]},
+    {id:'p2',title:'평가계획 설계 (종류와 반영 비율)',num:'2',items:[
+      {id:'p2a',text:'정기시험 실시 교과: 서답형 평가를 정기시험 배점의 30% 이상으로 계획',note:'수행평가 60% 이상 교과(학관위 심의 거친 경우) 제외. 국·수·영·한국사·사회·과학 교과군: 서·논술형 20% 이상'},
+      {id:'p2b',text:'정기시험 및 수행평가 영역의 서·논술형 평가 환산 비율이 20% 이상인지 확인',note:''},
+      {id:'p2c',text:'[특] 1·2학년 전문교과 전공실무과목(3학년 전문교과Ⅱ 실무과목): 능력단위별 반영비율 합계 100% 확인',note:''},
+      {id:'p2d',text:'수행평가는 최소 2개 영역 이상 계획',note:'각 수행평가 시기 적절히 분산, 각 영역이 서로 다른 성취기준을 다룰 수 있도록 설정, 특정 단원에 평가가 집중되는 것 지양'},
+      {id:'p2e',text:'수행평가 영역명은 구체적으로 작성 (평가내용 및 평가방법이 표현되도록)',note:''},
+    ]},
+    {id:'p3',title:'수행평가 과제별 세부 계획',num:'3',items:[
+      {id:'p3a',text:'수행평가 영역별로 성취기준과 성취수준(평가기준) 명시',note:'성취기준·교육과정 내용에 근거하여 평가요소가 제시되었는지 확인'},
+      {id:'p3b',text:'반영비율 표에 제시된 평가 시기·반영 비율 = 과제별 세부 계획의 내용 일치 여부',note:''},
+      {id:'p3c',text:'성취기준 분석 → 평가요소 선정 → 이를 고려한 평가 방법 선정',note:'잘못된 예: 발표 내용이 없는데 평가 방법을 구술·발표라고 선택'},
+      {id:'p3d',text:'암기식·과제형 수행평가 금지, 일제고사 형태의 평가 지양',note:''},
+      {id:'p3e',text:'수행평가의 기본점수 부여 시 영역 만점의 40% 이하로 설정',note:''},
+      {id:'p3f',text:'적절한 서·논술형 평가 방식을 활용하고 있는지 확인',note:'발표, 구술, 실험 준비, 그림 그리기 등은 서·논술형 평가가 아님'},
+      {id:'p3g',text:'채점 기준표에서 항목(채점요소)별 배점의 급간을 균등하게 설정',note:'잘못된 예: 채점요소 A의 배점 20-17-14-11-5 (불균등)'},
+      {id:'p3h',text:'채점 기준표에서 채점 기준(기대 수행)이 중복되지 않았는지 확인',note:'잘못된 예: "3가지 이상 충족 15점 / 1가지 이상 충족 10점" (범위 중복) → 올바른 예: "3~4가지 충족 15점 / 1~2가지 충족 10점"'},
+      {id:'p3i',text:'지적 횟수·제출 기한·포트폴리오 분량·성취율(%)·성실성을 채점 기준으로 삼는 것 지양',note:'성취기준에 따른 학습 과정·역량을 종합적으로 평가하는 과정 중심 채점 기준 마련 필요'},
+      {id:'p3j',text:'채점 기준(기대 수행)의 객관성 확보 여부',note:'잘못된 예: "지적 개수당 1점 감점", "활동에 90% 이상 참여한 경우", "정성을 다해/성의 없이" 등 모호한 표현 지양'},
+      {id:'p3k',text:'모둠활동 시 개별 학생에게 역할 부여, 개인별 학습과제에 대한 수행 과정·결과를 평가하도록 계획',note:''},
+      {id:'p3l',text:'수행평가 부정행위 유형 및 부정행위자 처리 기준 명시',note:'교과별 평가계획 또는 학업성적관리규정에 명시해야 함'},
+      {id:'p3m',text:'AI를 활용하는 경우 AI 활용 관리 방안을 포함하였는지 확인',note:''},
+    ]},
+    {id:'p4',title:'기타 (인정점·동점자 처리 기준 등)',num:'4',items:[
+      {id:'p4a',text:'추정분할점수 사용 교과: 수행평가 추정분할점수를 평가계획에 포함',note:''},
+      {id:'p4b',text:'장기 미인정 결석자·고의적 미제출자·백지답안 제출자: 점수를 기본점수보다 낮게 설정',note:''},
+      {id:'p4c',text:'수행평가만으로 평가하는 교과: 신체장애학생 인정점 산출 방법을 평가계획에 명시',note:''},
+      {id:'p4d',text:'정기시험 실시 교과: 동점자 처리 기준·교차채점 계획 반드시 작성',note:''},
+      {id:'p4e',text:'수행평가 영역명과 동점자 처리 기준의 영역명이 동일하게 기재되었는지 확인',note:'잘못된 예: 앞부분 "효소의 작용 실험" / 동점자 기준표 "효소 실험" (불일치)'},
+      {id:'p4f',text:'1·2학년: 학기 단위 성취수준 설정, 성취기준별 성취수준 명시 여부',note:''},
+      {id:'p4g',text:'과목별 최소 성취수준을 설정하였는지 확인',note:'__cat__1·2학년|공통국어, 공통수학/기본수학, 공통영어/기본영어, 한국사, 통합사회, 통합과학, 과학탐구실험__3학년|공통과목 국어·수학·영어 및 전문교과Ⅱ 실무과목'},
+    ]},
+  ]}
+};
+
+function calcTotal(){let n=0;['reg','plan'].forEach(t=>DATA[t].sections.forEach(s=>n+=s.items.length));return n;}
+const TOTAL=calcTotal();
+
+let allData={}, curSchool=null, curTab='reg', pollTimer=null, opTimers={};
+let inspector={name:'',school:'',date:''};
+let adminFilter='all';
+
+async function apiGet(p){
+  const r=await fetch(API_URL+'?'+new URLSearchParams(p));
+  return r.json();
+}
+async function apiPost(b){
+  // Apps Script는 POST redirect 시 GET으로 재요청 필요
+  const url=API_URL+'?'+new URLSearchParams({action:b.action,school:b.school||''});
+  const r=await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(b)
+  });
+  return r.json();
+}
+
+async function loadAll(msg){
+  try{const r=await apiGet({action:'getAll'});if(r.ok){allData=r.data||{};renderAdminTable();if(msg)toast('새로고침 완료');}}catch(e){
+    allData={};try{renderAdminTable();}catch(e2){}
+  }
+}
+
+function showOnly(id){
+  ['admin-home','entry-screen','check','assign-screen','review2-screen'].forEach(x=>{
+    document.getElementById(x).style.display=x===id?'block':'none';
+  });
+}
+
+// ── 배정표 화면
+function showAssignmentBoard(){
+  const tbody=document.getElementById('assign-tbody');
+  if(!tbody.innerHTML){
+    let prevGroup=null;
+    ASSIGNMENTS.forEach(a=>{
+      const tr=document.createElement('tr');
+      if(a.group!==prevGroup){
+        prevGroup=a.group;
+        tr.style.borderTop='2px solid var(--blue-soft)';
+      }
+      const cells=[a.no, a.school, a.name, ...a.assigned.concat(Array(5-a.assigned.length).fill('')), a.group];
+      tr.innerHTML=cells.map((v,i)=>{
+        if(i>=3&&i<=7&&v){
+          const type=getSchoolType(v);
+          const bg=type==='special'?'background:#d1fae5':type==='voc'?'background:#fef9c3':'';
+          const fw=type!=='normal'?'font-weight:700':'';
+          return `<td style="padding:10px 14px;font-size:14px;border-bottom:1px solid var(--fog);text-align:center;${bg};${fw}">${v}</td>`;
+        }
+        if(i===8) return `<td style="padding:10px 14px;font-size:14px;border-bottom:1px solid var(--fog);text-align:center;font-weight:700;color:var(--blue)">${v}분임</td>`;
+        return `<td style="padding:10px 14px;font-size:14px;border-bottom:1px solid var(--fog);text-align:center">${v}</td>`;
+      }).join('');
+      tbody.appendChild(tr);
+    });
+  }
+  showOnly('assign-screen');
+}
+
+// ── 이름 입력 시 배정 학교 필터링
+function onNameInput(){
+  const name=document.getElementById('entry-name').value.trim();
+  const sel=document.getElementById('entry-school');
+  const assigned=getAssignedSchools(name);
+  // 모든 옵션 초기화
+  Array.from(sel.options).forEach(o=>{
+    if(!o.value) return;
+    o.hidden = assigned.length>0 && !assigned.includes(o.value);
+  });
+  // 선택값이 숨겨진 경우 초기화
+  if(sel.value && assigned.length>0 && !assigned.includes(sel.value)){
+    sel.value='';
+    document.getElementById('entry-preview').style.display='none';
+    document.getElementById('entry-date-wrap').style.display='block';
+  }
+  // 배정 학교 없는 이름(관리자 등)이면 전체 표시
+}
+
+// ── 2차 검토 화면
+function openReview2Screen(){
+  const sel=document.getElementById('review2-school-sel');
+  if(sel.options.length<=1){
+    SCHOOLS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+  }
+  showOnly('review2-screen');
+}
+
+
+/* ── 관리자 ── */
+function showAdminLogin(){document.getElementById('admin-login').style.display='flex';}
+function closeAdminLogin(){document.getElementById('admin-login').style.display='none';document.getElementById('admin-pw-input').value='';document.getElementById('login-err').style.display='none';}
+function tryAdminLogin(){
+  if(document.getElementById('admin-pw-input').value===ADMIN_PW){closeAdminLogin();loadAll(false);showOnly('admin-home');}
+  else document.getElementById('login-err').style.display='block';
+}
+function exitAdmin(){showOnly('entry-screen');}
+function setFilter(btn,r){adminFilter=r;document.querySelectorAll('.chip').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderAdminTable();}
+
+function renderAdminTable(){
+  let done=0,ing=0,totalReq=0;
+  const schools=adminFilter==='all'?SCHOOLS:SCHOOLS.filter(s=>getRegion(s)===adminFilter);
+  const tbody=document.getElementById('adm-tbody');tbody.innerHTML='';
+  schools.forEach(school=>{
+    const sd=allData[school]||{};
+    const cnt=Object.values(sd.checks||{}).filter(Boolean).length;
+    const pct=Math.round(cnt/TOTAL*100);
+    const judges=sd.judges||{};
+    const req=Object.values(judges).filter(j=>j==='req').length;
+    const ok=Object.values(judges).filter(j=>j==='ok').length;
+    const meta=sd.meta||{};
+    if(cnt>=TOTAL)done++;else if(cnt>0)ing++;
+    totalReq+=req;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:17px;color:var(--ink3);text-align:center">${getRegion(school)}</td>
+      <td style="text-align:left"><strong>${school}</strong></td>
+      <td style="font-size:17px;text-align:center">${meta.name||'—'}</td>
+      <td style="font-size:17px;text-align:center">${meta.date||'—'}</td>
+      <td style="text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:8px"><div class="prog-bar"><div class="prog-bar-fill" style="width:${pct}%"></div></div><span style="font-size:16.5px;color:var(--ink3);font-weight:600">${pct}%</span></div></td>
+      <td style="text-align:center"><span style="color:var(--green);font-weight:700;font-size:18px">${ok}</span></td>
+      <td style="text-align:center"><span style="color:${req>0?'var(--red)':'var(--ink3)'};font-weight:700;font-size:18px">${req}</span></td>
+      <td style="text-align:center"><button class="btn" style="padding:6px 16px;font-size:16px" onclick="openModal('${school}')">상세</button></td>`;
+    tbody.appendChild(tr);
+  });
+  document.getElementById('adm-total').textContent=schools.length;
+  document.getElementById('adm-done').textContent=done;
+  document.getElementById('adm-ing').textContent=ing;
+  document.getElementById('adm-req').textContent=totalReq;
+}
+
+async function openModal(school){
+  document.getElementById('modal-title').textContent=school+' — 로딩 중...';
+  document.getElementById('modal-body').innerHTML='<div style="text-align:center;padding:40px;color:var(--ink3)">데이터를 불러오는 중...</div>';
+  document.getElementById('modal-overlay').style.display='flex';
+  try{const r=await apiGet({action:'getSchool',school});if(r.ok)allData[school]=r.data;}catch(e){}
+
+  const sd=allData[school]||{};
+  const judges=sd.judges||{},opinions=sd.opinions||{},meta=sd.meta||{},checks=sd.checks||{};
+  const subjects=sd.subjects||[];
+  const doneCnt=Object.values(checks).filter(Boolean).length;
+  const okCnt=Object.values(judges).filter(j=>j==='ok').length;
+  const reqCnt=Object.values(judges).filter(j=>j==='req').length;
+  const pct=Math.round(doneCnt/TOTAL*100);
+  document.getElementById('modal-title').textContent=school+' — 점검 결과 요약';
+
+  // reg만 수정요청 수집
+  const reqBySec=[];
+  DATA['reg'].sections.forEach(sec=>{
+    const items=sec.items.filter(it=>judges[it.id]==='req');
+    if(items.length>0) reqBySec.push({label:'학업성적관리규정 › '+sec.title, items, opinion:(opinions[sec.id]||{}).text||''});
+  });
+
+  const F='19.6px'; // 14×1.4
+  const F2='18.2px';
+  const F3='19.6px';
+
+  let html=`
+  <div style="display:flex;gap:2px;background:var(--fog);border-radius:var(--r-md);overflow:hidden;margin-bottom:22px;align-items:stretch">
+    <div style="background:var(--canvas);padding:16px 20px;flex:0 0 auto;width:160px;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:${F};font-weight:700;color:var(--ink3);margin-bottom:6px">점검자</div>
+      <div style="font-size:${F};font-weight:700;color:var(--ink)">${meta.name||'—'}</div>
+    </div>
+    <div style="background:var(--canvas);padding:16px 20px;flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:${F};font-weight:700;color:var(--ink3);margin-bottom:6px">점검일시</div>
+      <div style="font-size:${F};font-weight:600;color:var(--ink)">${meta.date||'—'}</div>
+    </div>
+    <div style="background:var(--canvas);padding:16px 24px;flex:0 0 auto;width:180px;display:flex;flex-direction:column;justify-content:center;border-left:2px solid var(--fog)">
+      <div style="font-size:${F};font-weight:700;color:var(--ink3);margin-bottom:6px">진행률</div>
+      <div style="font-size:28px;font-weight:700;color:var(--blue);line-height:1">${pct}%</div>
+      <div style="font-size:${F2};color:var(--ink3);margin-top:4px">${doneCnt} / ${TOTAL} 항목</div>
+    </div>
+    <div style="background:var(--canvas);padding:16px 24px;flex:0 0 auto;display:flex;align-items:center;gap:20px;border-left:2px solid var(--fog)">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div style="font-size:${F};font-weight:700;color:var(--green);margin-bottom:6px">적합</div>
+        <div style="font-size:26px;font-weight:700;color:var(--green);line-height:1">${okCnt}<span style="font-size:${F2};margin-left:2px">건</span></div>
+      </div>
+      <div style="width:1px;height:44px;background:var(--fog)"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div style="font-size:${F};font-weight:700;color:var(--red);margin-bottom:6px;white-space:nowrap">수정 요청</div>
+        <div style="font-size:26px;font-weight:700;color:var(--red);line-height:1">${reqCnt}<span style="font-size:${F2};margin-left:2px">건</span></div>
+      </div>
+    </div>
+  </div>`;
+
+  if(reqBySec.length>0){
+    html+=`<div style="background:var(--red-bg);border:2px solid var(--red-border);border-radius:var(--r-md);padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:${F3};font-weight:700;color:var(--red);margin-bottom:16px">🔴 수정 요청 항목 (${reqCnt}건)</div>`;
+    reqBySec.forEach(({label,items,opinion})=>{
+      html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--red-border)">
+        <div style="font-size:${F2};font-weight:700;color:var(--red);margin-bottom:8px">${label}</div>
+        ${items.map((it,i)=>`<div style="display:flex;gap:10px;padding:6px 0;font-size:${F};align-items:flex-start;border-bottom:1px dotted rgba(192,57,43,.15)"><span style="color:var(--red);font-weight:700;flex-shrink:0;min-width:22px">${i+1}.</span><span>${it.text}</span></div>`).join('')}
+        ${opinion?`<div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.65);border-radius:var(--r-sm);font-size:${F2};color:#7f2020;line-height:1.6"><b>💬 검토 의견:</b> ${opinion}</div>`:''}
+      </div>`;
+    });
+    html+=`</div>`;
+  } else {
+    html+=`<div style="background:var(--green-bg);border:2px solid var(--green-border);border-radius:var(--r-md);padding:16px 24px;margin-bottom:20px;font-size:${F};color:var(--green);font-weight:600">✅ 수정 요청 항목 없음</div>`;
+  }
+
+  // reg 섹션별 검토 의견
+  let opRows='';
+  DATA['reg'].sections.forEach(sec=>{
+    const op=(opinions[sec.id]||{}).text||'';
+    const secOk=sec.items.filter(it=>judges[it.id]==='ok').length;
+    const secReq=sec.items.filter(it=>judges[it.id]==='req').length;
+    if(!op.trim()) return;
+    opRows+=`<div style="padding:13px 0;border-bottom:1px solid var(--fog)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-wrap:wrap;gap:6px">
+        <span style="font-size:${F};font-weight:700;color:var(--ink2)">학업성적관리규정 › ${sec.title}</span>
+        <div style="display:flex;gap:5px">${secOk>0?`<span class="badge ok" style="font-size:${F2}">✅ ${secOk}</span>`:''} ${secReq>0?`<span class="badge req" style="font-size:${F2}">🔴 ${secReq}</span>`:''}</div>
+      </div>
+      <div style="font-size:${F};color:var(--ink);line-height:1.7;white-space:pre-wrap">${op}</div>
+    </div>`;
+  });
+  if(opRows){
+    html+=`<div style="background:var(--canvas);border:2px solid var(--fog);border-radius:var(--r-md);padding:20px 24px;margin-bottom:20px">
+      <div style="font-size:${F3};font-weight:700;color:var(--ink2);margin-bottom:12px">💬 학업성적관리규정 검토 의견</div>${opRows}</div>`;
+  }
+
+  // 과목별 의견
+  if(subjects.length>0){
+    html+=`<div style="background:var(--canvas);border:2px solid var(--fog);border-radius:var(--r-md);padding:20px 24px">
+      <div style="font-size:${F3};font-weight:700;color:var(--ink2);margin-bottom:14px">📋 교과별 평가계획 — 과목별 검토 의견</div>`;
+    subjects.forEach(s=>{
+      html+=`<div style="padding:12px 0;border-bottom:1px solid var(--fog)">
+        <div style="font-size:${F};font-weight:700;color:var(--ink2);margin-bottom:6px">${s.name||'(과목명 없음)'}</div>
+        <div style="font-size:${F2};color:var(--ink);line-height:1.7;white-space:pre-wrap">${s.text&&s.text.trim()?s.text:'—'}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  document.getElementById('modal-body').innerHTML=html;
+}
+function closeModal(){document.getElementById('modal-overlay').style.display='none';}
+
+/* ── 진입 ── */
+function todayStr(){
+  const now=new Date();
+  return `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}`;
+}
+
+function initEntry(){
+  const sel=document.getElementById('entry-school');
+  SCHOOLS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+  document.getElementById('entry-date').value=todayStr();
+}
+
+async function onSchoolChange(){
+  const school=document.getElementById('entry-school').value;
+  const preview=document.getElementById('entry-preview');
+  const datewrap=document.getElementById('entry-date-wrap');
+  if(!school){preview.style.display='none';datewrap.style.display='block';return;}
+
+  // 서버에서 기존 데이터 확인
+  try{
+    const r=await apiGet({action:'getSchool',school});
+    if(r.ok) allData[school]=r.data;
+  }catch(e){}
+
+  const sd=allData[school]||{};
+  const meta=sd.meta||{};
+  const checks=sd.checks||{};
+  const judges=sd.judges||{};
+  const doneCnt=Object.values(checks).filter(Boolean).length;
+  const okCnt=Object.values(judges).filter(j=>j==='ok').length;
+  const reqCnt=Object.values(judges).filter(j=>j==='req').length;
+  const pct=Math.round(doneCnt/TOTAL*100);
+
+  if(doneCnt>0||meta.name){
+    // 기존 데이터 있음 → 미리보기 표시, 날짜 입력 숨김
+    const content=document.getElementById('entry-preview-content');
+    content.innerHTML=`
+      <div>📌 <b>이전 점검자:</b> ${meta.name||'—'} &nbsp;|&nbsp; <b>점검일시:</b> ${meta.date||'—'}</div>
+      <div>📊 <b>진행률:</b> ${pct}% (${doneCnt}/${TOTAL}항목) &nbsp;|&nbsp; ✅ 적합 ${okCnt}건 &nbsp;|&nbsp; 🔴 수정 요청 ${reqCnt}건</div>
+    `;
+    // 이전 점검자명 자동 채우기
+    if(meta.name&&!document.getElementById('entry-name').value){
+      document.getElementById('entry-name').value=meta.name;
+    }
+    preview.style.display='block';
+    datewrap.style.display='none';
+  } else {
+    // 신규 → 날짜 입력 표시
+    preview.style.display='none';
+    datewrap.style.display='block';
+    document.getElementById('entry-date').value=todayStr();
+  }
+}
+
+function useExistingDate(){
+  const school=document.getElementById('entry-school').value;
+  const meta=(allData[school]||{}).meta||{};
+  document.getElementById('entry-date').value=meta.date||todayStr();
+  document.getElementById('entry-preview').style.display='none';
+  document.getElementById('entry-date-wrap').style.display='block';
+}
+
+function useTodayDate(){
+  document.getElementById('entry-date').value=todayStr();
+  document.getElementById('entry-preview').style.display='none';
+  document.getElementById('entry-date-wrap').style.display='block';
+}
+
+// 이름 입력 시 배정 학교만 필터링
+function filterSchoolsByName(){
+  const name=document.getElementById('entry-name').value.trim();
+  const sel=document.getElementById('entry-school');
+  const assigned=getAssignedSchools(name);
+  sel.innerHTML='<option value="">— 학교를 선택하세요 —</option>';
+  const list=assigned.length>0?assigned:SCHOOLS;
+  list.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+  document.getElementById('entry-preview').style.display='none';
+  document.getElementById('entry-date-wrap').style.display='block';
+}
+
+async function startCheck(){
+  const name=document.getElementById('entry-name').value.trim();
+  const school=document.getElementById('entry-school').value;
+  const date=document.getElementById('entry-date').value.trim()||todayStr();
+  if(!name){alert('점검자 성명을 입력해주세요');return;}
+  if(!school){alert('점검 대상 학교를 선택해주세요');return;}
+  inspector={name,school,date};curSchool=school;
+
+  // 기존 데이터 없으면 서버에서 로드
+  if(!allData[school]){
+    try{const r=await apiGet({action:'getSchool',school});if(r.ok)allData[school]=r.data;}catch(e){}
+  }
+
+  const sd=allData[school]||(allData[school]={});
+  if(!sd.meta)sd.meta={};
+  sd.meta.name=name;
+  sd.meta.date=date;
+  apiPost({action:'saveMeta',school,meta:{name,date}}).catch(()=>{});
+
+  ['ibar-name','ibar-school','ibar-date'].forEach((id,i)=>{document.getElementById(id).textContent=[name,school,date][i];});
+  document.getElementById('ck-name').textContent=school;
+  renderPanes();updateProgress();showOnly('check');switchTab('reg');window.scrollTo(0,0);
+  clearInterval(pollTimer);
+  pollTimer=setInterval(async()=>{if(!curSchool)return;try{const r=await apiGet({action:'getSchool',school:curSchool});if(r.ok){allData[curSchool]=r.data;applyAll();updateProgress();}}catch(e){}},30000);
+}
+function goEntry(){curSchool=null;clearInterval(pollTimer);showOnly('entry-screen');}
+
+/* ── 탭 ── */
+function switchEntryTab(tab){
+  ['start','assign'].forEach(t=>{
+    document.getElementById('etab-'+t).className='adm-tab'+(t===tab?' on':'');
+    document.getElementById('etab-content-'+t).style.display=t===tab?'block':'none';
+  });
+  if(tab==='assign') renderEntryAssignTable();
+}
+
+function buildAssignTableHTML(){
+  const groups={};
+  ASSIGNMENTS.forEach(a=>{if(!groups[a.group])groups[a.group]=[];groups[a.group].push(a);});
+  const legend=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 20px;background:var(--canvas);border:2px solid var(--fog);border-radius:var(--r-md);margin-bottom:16px;font-size:15px;font-weight:600">
+    <span style="color:var(--ink2)">범례</span>
+    <span class="school-chip normal" style="display:inline-block;padding:4px 16px">일반고</span>
+    <span class="school-chip jonghap" style="display:inline-block;padding:4px 16px">종합고</span>
+    <span class="school-chip voc" style="display:inline-block;padding:4px 16px">특성화고</span>
+  </div>`;
+  let html=`<table class="assign-tbl">
+    <thead><tr><th>순</th><th>소속</th><th>이름</th><th>배정 학교</th><th>교차검토</th></tr></thead><tbody>`;
+  Object.keys(groups).sort((a,b)=>+a-+b).forEach(g=>{
+    groups[g].forEach(a=>{
+      const cells=[];
+      for(let i=0;i<5;i++){
+        const s=a.assigned[i];
+        if(s){const t=getSchoolType(s,a.no);cells.push(`<span class="school-chip ${t}">${s}</span>`);}
+        else cells.push(`<span class="school-chip empty"></span>`);
+      }
+      html+=`<tr>
+        <td style="color:var(--ink3);font-size:15px">${a.no}</td>
+        <td style="text-align:center;font-size:15px;font-weight:600">${a.school}</td>
+        <td style="font-size:16px;font-weight:700">${a.name}</td>
+        <td style="padding:8px 12px"><div class="school-grid-wrap">${cells.join('')}</div></td>
+        <td><span class="group-badge">${a.group}분임</span></td>
+      </tr>`;
+    });
+  });
+  html+=`</tbody></table>`;
+  return legend+html;
+}
+
+function renderEntryAssignTable(){
+  const wrap=document.getElementById('entry-assign-wrap');
+  if(wrap.innerHTML) return;
+  wrap.innerHTML=`<h2 style="font-size:20px;font-weight:700;margin-bottom:16px">점검단 배정표</h2>`+buildAssignTableHTML();
+}
+
+function switchAdminTab(tab){
+  ['dashboard','assign','review2'].forEach(t=>{
+    document.getElementById('admtab-'+t).className='adm-tab'+(t===tab?' on':'');
+    document.getElementById('admcontent-'+t).style.display=t===tab?'block':'none';
+  });
+  if(tab==='assign') renderAssignTable();
+  if(tab==='review2') initReview2Select();
+}
+
+function renderAssignTable(){
+  const wrap=document.getElementById('assign-table-wrap');
+  wrap.innerHTML=buildAssignTableHTML();
+}
+
+// ── 2차 검토
+let review2Timers={};
+
+function initReview2Select(){
+  const sel=document.getElementById('review2-school-sel');
+  if(sel.options.length>1) return; // 이미 초기화됨
+  SCHOOLS.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+async function loadReview2(){
+  const school=document.getElementById('review2-school-sel').value;
+  const content=document.getElementById('review2-content');
+  if(!school){content.innerHTML='';return;}
+  content.innerHTML='<div style="text-align:center;padding:40px;color:var(--ink3)">불러오는 중...</div>';
+  try{const r=await apiGet({action:'getSchool',school});if(r.ok)allData[school]=r.data;}catch(e){}
+  renderReview2(school);
+}
+
+function renderReview2(school){
+  const content=document.getElementById('review2-content');
+  const sd=allData[school]||{};
+  const opinions=sd.opinions||{};
+  const review2=sd.review2||{};
+  const judges=sd.judges||{};
+  const meta=sd.meta||{};
+  const subjects=sd.subjects||[];
+  const FS='17.5px'; // 섹션 라벨
+  const FS2='16.5px'; // 1차 의견 텍스트/입력된 의견 없음
+  const FS3='17.5px'; // 패널 헤더
+  const FS_TA='16.5px'; // 2차 textarea
+
+  let html=`<div style="margin-bottom:16px;padding:14px 20px;background:var(--canvas);border-radius:var(--r-md);box-shadow:var(--shadow-sm);display:flex;gap:24px;font-size:${FS};color:var(--ink2);flex-wrap:wrap">
+    <span><b>점검자(1차):</b> ${meta.name||'—'}</span>
+    <span><b>점검일시:</b> ${meta.date||'—'}</span>
+  </div>
+  <div class="review2-wrap">
+    <div class="review2-panel">
+      <div class="review2-panel-hd first" style="font-size:${FS3}">📋 1차 검토 의견 (읽기 전용)</div>`;
+
+  // reg만 섹션별 의견
+  DATA['reg'].sections.forEach(sec=>{
+    const op=(opinions[sec.id]||{}).text||'';
+    const secReq=sec.items.filter(it=>judges[it.id]==='req').length;
+    const secOk=sec.items.filter(it=>judges[it.id]==='ok').length;
+    html+=`<div class="review2-sec">
+      <div class="review2-sec-title" style="font-size:${FS3}">학업성적관리규정 — ${sec.title}
+        <span style="font-weight:400;margin-left:8px">
+          ${secOk>0?`<span style="color:var(--green)">✅${secOk}</span>`:''}
+          ${secReq>0?`<span style="color:var(--red);margin-left:4px">🔴${secReq}</span>`:''}
+        </span>
+      </div>
+      ${op.trim()?`<div class="review2-text" style="font-size:${FS2}">${op}</div>`:`<div class="review2-empty" style="font-size:${FS2}">입력된 의견 없음</div>`}
+    </div>`;
+  });
+
+  // plan: 과목별 의견
+  html+=`<div class="review2-sec">
+    <div class="review2-sec-title" style="font-size:${FS3}">교과별 평가계획 — 과목별 검토 의견</div>`;
+  if(subjects.length===0){
+    html+=`<div class="review2-empty" style="font-size:${FS2}">입력된 과목별 의견 없음</div>`;
+  } else {
+    subjects.forEach(s=>{
+      html+=`<div style="margin-bottom:14px;padding:12px 14px;background:var(--cloud);border-radius:var(--r-sm)">
+        <div style="font-size:${FS};font-weight:700;color:var(--ink2);margin-bottom:6px">${s.name||'(과목명 없음)'}</div>
+        <div style="font-size:${FS2};color:var(--ink);line-height:1.7;white-space:pre-wrap">${s.text&&s.text.trim()?s.text:'입력된 의견 없음'}</div>
+      </div>`;
+    });
+  }
+  html+=`</div></div>
+
+    <div class="review2-panel">
+      <div class="review2-panel-hd second" style="font-size:${FS3}">✏️ 2차 검토 의견 (직접 작성)</div>`;
+
+  // 2차: reg 섹션별 작성
+  DATA['reg'].sections.forEach(sec=>{
+    const r2text=(review2[sec.id]||{}).text||'';
+    html+=`<div class="review2-sec">
+      <div class="review2-sec-title" style="font-size:${FS3}">학업성적관리규정 — ${sec.title}</div>
+      <textarea class="review2-ta" id="r2ta-${sec.id}" style="font-size:${FS_TA}"
+        placeholder="2차 검토 의견을 직접 작성해주세요."
+        oninput="scheduleR2Save('${school}','${sec.id}')">${r2text}</textarea>
+      <div class="review2-save-st" id="r2st-${sec.id}" style="font-size:14.5px">자동 저장됩니다</div>
+    </div>`;
+  });
+
+  // 2차: 교과별 평가계획 — 과목별 자유 작성
+  const r2plan=(review2['plan_subjects']||{}).text||'';
+  html+=`<div class="review2-sec">
+    <div class="review2-sec-title" style="font-size:${FS3}">교과별 평가계획 — 과목별 검토 의견</div>
+    <textarea class="review2-ta" id="r2ta-plan_subjects" style="font-size:${FS_TA};min-height:160px"
+      placeholder="과목명과 점검 결과를 직접 작성해주세요."
+      oninput="scheduleR2Save('${school}','plan_subjects')">${r2plan}</textarea>
+    <div class="review2-save-st" id="r2st-plan_subjects" style="font-size:14.5px">자동 저장됩니다</div>
+  </div>`;
+
+  html+=`</div></div>`;
+  content.innerHTML=html;
+}
+
+function scheduleR2Save(school,secId){
+  clearTimeout(review2Timers[secId]);
+  const el=document.getElementById('r2st-'+secId);
+  if(el) el.textContent='저장 중...';
+  review2Timers[secId]=setTimeout(()=>saveR2(school,secId),900);
+}
+
+async function saveR2(school,secId){
+  const sd=allData[school]||(allData[school]={});
+  if(!sd.review2) sd.review2={};
+  const ta=document.getElementById('r2ta-'+secId);
+  if(!sd.review2[secId]) sd.review2[secId]={};
+  sd.review2[secId].text=ta?ta.value:'';
+  try{
+    await apiPost({action:'saveReview2',school,review2:sd.review2});
+    const el=document.getElementById('r2st-'+secId);
+    if(el) el.textContent='저장됨 ✓';
+  }catch(e){
+    const el=document.getElementById('r2st-'+secId);
+    if(el) el.textContent='저장 실패 ⚠';
+  }
+}
+// ── 탭
+function switchTab(t){
+  curTab=t;
+  ['reg','plan','result','opinion'].forEach(x=>{
+    document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
+    document.getElementById('pane-'+x).style.display=x===t?'block':'none';
+  });
+  if(t==='result')renderResult();
+  if(t==='opinion')renderOpinionReport();
+}
+
+/* ── 패널 렌더 ── */
+function renderPanes(){
+  ['reg','plan'].forEach(tab=>{
+    const isTeal=tab==='reg';
+    const isPlan=tab==='plan';
+    const pane=document.getElementById('pane-'+tab);
+    pane.innerHTML=''; // 먼저 완전히 비우기
+
+    // 통계 카드 — reg만, plan은 참고용 안내로 대체
+    if(!isPlan){
+      const statsDiv=document.createElement('div');
+      statsDiv.innerHTML=`<div class="stat-row">
+        <div class="stat-card"><div class="s-lbl">전체 항목</div><div class="s-val" id="st-total-${tab}">—</div><div class="s-unit">개 항목</div></div>
+        <div class="stat-card"><div class="s-lbl">확인 완료</div><div class="s-val" id="st-done-${tab}" style="color:var(--blue)">—</div><div class="s-unit">개 완료</div></div>
+        <div class="stat-card"><div class="s-lbl">✅ 적합</div><div class="s-val" id="st-ok-${tab}" style="color:var(--green)">—</div><div class="s-unit">건</div></div>
+        <div class="stat-card"><div class="s-lbl">🔴 수정 요청</div><div class="s-val" id="st-req-${tab}" style="color:var(--red)">—</div><div class="s-unit">건</div></div>
+      </div>`;
+      pane.appendChild(statsDiv.firstElementChild);
+    } else {
+      const noticeDiv=document.createElement('div');
+      noticeDiv.style.cssText='background:#f0f5ff;border:2px solid var(--blue-soft);border-radius:var(--r-md);padding:14px 20px;margin-bottom:20px;font-size:15px;color:var(--blue-deep);line-height:1.7';
+      noticeDiv.innerHTML='📌 <b>참고용 점검표입니다.</b> 아래 항목을 확인하면서 하단의 <b>과목별 검토 의견</b>에 과목명과 점검 결과를 직접 작성해주세요.';
+      pane.appendChild(noticeDiv);
+    }
+
+    DATA[tab].sections.forEach(sec=>{
+      const card=document.createElement('div');card.className='sec-card';
+      const hd=document.createElement('div');hd.className='sec-hd '+(isTeal?'teal':'purple');
+      hd.innerHTML=`<div class="sec-hd-l">
+        <div class="num-badge ${isTeal?'teal':'purple'}">${sec.num}</div>
+        <div class="sec-ttl">${sec.title}</div>
+      </div>
+      <div class="sec-hd-r">
+        ${!isPlan?`<div class="sec-mini" id="sec-mini-${sec.id}"></div>
+        <span class="sec-cnt" id="sec-cnt-${sec.id}"></span>`:''}
+        <span class="chev" id="chev-${sec.id}">▼</span>
+      </div>`;
+      hd.onclick=()=>{const b=document.getElementById('sb-'+sec.id);const c=document.getElementById('chev-'+sec.id);const o=b.classList.toggle('open');c.className='chev'+(o?' open':'');};
+      card.appendChild(hd);
+      const body=document.createElement('div');body.className='sec-body';body.id='sb-'+sec.id;
+      sec.items.forEach(item=>{
+        const row=document.createElement('div');row.className='ci';
+        if(!isPlan){
+          // reg: 판정 버튼 있음
+          row.innerHTML=`<div class="ci-left">
+            <div class="ci-content">
+              <div class="ci-text" id="cit-${item.id}">${item.text}</div>
+              ${item.note?renderNote(item.note):''}
+            </div>
+          </div>
+          <div class="ci-judge">
+            <button class="jbtn ok" id="jbtn-ok-${item.id}" onclick="setJudge('reg','${item.id}','ok')">✅ 적합</button>
+            <button class="jbtn req" id="jbtn-req-${item.id}" onclick="setJudge('reg','${item.id}','req')">🔴 수정 요청</button>
+          </div>`;
+        } else {
+          // plan: 참고용 — 체크·버튼 없이 항목 텍스트만
+          row.innerHTML=`<div class="ci-left" style="cursor:default">
+            <div class="ci-content">
+              <div class="ci-text" style="color:var(--ink2)">${item.text}</div>
+              ${item.note?renderNote(item.note):''}
+            </div>
+          </div>`;
+        }
+        body.appendChild(row);
+      });
+
+      // reg만 섹션 의견 추가
+      if(!isPlan){
+        const op=document.createElement('div');op.className='sec-opinion';
+        op.innerHTML=`<div class="sec-opinion-label">📝 검토 의견 — ${sec.title}</div>
+          <textarea class="opinion-ta" id="ota-${sec.id}" placeholder="${sec.title} 항목 전반에 대한 검토 의견을 입력하세요..." oninput="scheduleOp('reg','${sec.id}')"></textarea>
+          <div class="save-st" id="save-st-${sec.id}">자동 저장됩니다</div>`;
+        body.appendChild(op);
+      }
+      card.appendChild(body);pane.appendChild(card);
+    });
+
+    // plan 탭 하단에 과목별 검토 의견 섹션
+    if(isPlan){
+      const subjWrap=document.createElement('div');subjWrap.className='subject-opinion-wrap';
+      subjWrap.innerHTML=`
+        <div class="subject-opinion-hd">
+          <div>
+            <h3>📋 교과별 평가계획 — 과목별 검토 의견</h3>
+            <p>과목명을 입력하고 해당 과목의 점검 결과를 작성하세요</p>
+          </div>
+          <button class="subject-add-btn" onclick="addSubjectItem()">＋ 과목 추가</button>
+        </div>
+        <div class="subject-list" id="subject-list"></div>
+      `;
+      pane.appendChild(subjWrap);
+    }
+  });
+  applyAll();
+}
+
+// ── 과목별 검토 의견
+let subjTimers={};
+
+function getSubjects(){
+  return (allData[curSchool]||{}).subjects||[];
+}
+
+function saveSubjects(){
+  const sd=allData[curSchool]||(allData[curSchool]={});
+  const subjects=collectSubjectsFromDOM();
+  sd.subjects=subjects;
+  apiPost({action:'saveSubjects',school:curSchool,subjects}).catch(()=>showErr());
+}
+
+function collectSubjectsFromDOM(){
+  const list=document.getElementById('subject-list');
+  if(!list) return [];
+  const items=list.querySelectorAll('.subject-item');
+  const result=[];
+  items.forEach((el,i)=>{
+    const name=el.querySelector('.subject-name-input').value.trim();
+    const text=el.querySelector('.subject-ta').value;
+    result.push({id:'subj_'+i, name, text});
+  });
+  return result;
+}
+
+function renderSubjectList(){
+  const list=document.getElementById('subject-list');
+  if(!list) return;
+  const subjects=getSubjects();
+  list.innerHTML='';
+  if(subjects.length===0){
+    list.innerHTML=`<div style="padding:28px 24px;text-align:center;color:var(--ink3);font-size:15px">＋ 과목 추가 버튼을 눌러 과목을 추가하세요</div>`;
+    return;
+  }
+  subjects.forEach((s,i)=>appendSubjectItem(s.name,s.text,i));
+}
+
+function appendSubjectItem(name='',text='',idx){
+  const list=document.getElementById('subject-list');
+  if(!list) return;
+  // 빈 안내문 제거
+  const empty=list.querySelector('div[style*="text-align:center"]');
+  if(empty) empty.remove();
+
+  const id='subj_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const item=document.createElement('div');
+  item.className='subject-item';
+  item.dataset.id=id;
+  item.innerHTML=`
+    <div class="subject-item-hd">
+      <input class="subject-name-input" type="text" placeholder="과목명 입력 (예: 국어, 수학1...)" value="${name}" oninput="scheduleSubjSave('${id}')">
+      <button class="subject-del-btn" onclick="deleteSubjectItem(this)" title="삭제">✕</button>
+    </div>
+    <textarea class="subject-ta" placeholder="해당 과목 평가계획에 대한 점검 결과를 입력하세요..." oninput="scheduleSubjSave('${id}')">${text}</textarea>
+    <div class="subject-save-st" id="sst-${id}">자동 저장됩니다</div>
+  `;
+  list.appendChild(item);
+}
+
+function addSubjectItem(){
+  appendSubjectItem('','', Date.now());
+  // 새 항목 과목명 input에 포커스
+  const list=document.getElementById('subject-list');
+  if(!list) return;
+  const inputs=list.querySelectorAll('.subject-name-input');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+
+function deleteSubjectItem(btn){
+  const item=btn.closest('.subject-item');
+  if(item) item.remove();
+  const list=document.getElementById('subject-list');
+  if(list&&list.querySelectorAll('.subject-item').length===0){
+    list.innerHTML=`<div style="padding:28px 24px;text-align:center;color:var(--ink3);font-size:15px">＋ 과목 추가 버튼을 눌러 과목을 추가하세요</div>`;
+  }
+  saveSubjects();
+}
+
+function scheduleSubjSave(id){
+  clearTimeout(subjTimers[id]);
+  const st=document.getElementById('sst-'+id);
+  if(st) st.textContent='저장 중...';
+  subjTimers[id]=setTimeout(()=>{
+    saveSubjects();
+    const st2=document.getElementById('sst-'+id);
+    if(st2) st2.textContent='저장됨 ✓';
+  },900);
+}
+
+function renderNote(note){
+  if(!note) return '';
+  const isWarn=note.startsWith('⚠');
+
+  // __table__ : 번호|(내용)__ 형태 → 2열 표
+  if(note.startsWith('__table__')){
+    const rows=note.replace('__table__','').split('__');
+    const trs=rows.map(r=>{
+      const idx=r.indexOf('|');
+      if(idx<0) return '';
+      const num=r.slice(0,idx).trim();
+      const content=r.slice(idx+1).trim();
+      return `<tr><td>${num}</td><td>${content}</td></tr>`;
+    }).join('');
+    return `<div class="ci-note"><table class="note-table">${trs}</table></div>`;
+  }
+
+  // __cat__ : 분류|내용__ 형태 → 라벨+내용 목록
+  if(note.startsWith('__cat__')){
+    const rows=note.replace('__cat__','').split('__');
+    const items=rows.map(r=>{
+      const idx=r.indexOf('|');
+      if(idx<0) return '';
+      const label=r.slice(0,idx).trim();
+      const content=r.slice(idx+1).trim();
+      return `<div class="note-cat-row"><span class="note-cat-label">${label}</span><span class="note-cat-items">${content}</span></div>`;
+    }).join('');
+    return `<div class="ci-note"><div class="note-cat">${items}</div></div>`;
+  }
+
+  // 기본 텍스트 노트
+  return `<div class="ci-note${isWarn?' warn':''}">${note}</div>`;
+}
+
+function toggleCheck(tab,id){
+  sd.checks[id]=!sd.checks[id];setCbUI(id,sd.checks[id]);updateTabStats(tab);updateProgress();
+  apiPost({action:'saveChecks',school:curSchool,checks:sd.checks}).catch(()=>showErr());
+}
+function setJudge(tab,itemId,val){
+  const sd=allData[curSchool]||(allData[curSchool]={});
+  if(!sd.judges)sd.judges={};
+  if(!sd.checks)sd.checks={};
+  const prev=sd.judges[itemId];
+  if(prev===val){
+    // 같은 버튼 재클릭 → 판정 해제 + 체크도 해제
+    delete sd.judges[itemId];
+    sd.checks[itemId]=false;
+  } else {
+    // 판정 선택 → 자동으로 확인 완료 처리
+    sd.judges[itemId]=val;
+    sd.checks[itemId]=true;
+  }
+  setJudgeUI(itemId,sd.judges[itemId]||null);
+  setCbUI(itemId,!!sd.checks[itemId]);
+  updateTabStats(tab);updateProgress();
+  apiPost({action:'saveJudges',school:curSchool,judges:sd.judges}).catch(()=>showErr());
+  apiPost({action:'saveChecks',school:curSchool,checks:sd.checks}).catch(()=>showErr());
+}
+function scheduleOp(tab,secId){
+  clearTimeout(opTimers[secId]);document.getElementById('save-st-'+secId).textContent='저장 중...';
+  opTimers[secId]=setTimeout(()=>saveOp(tab,secId),900);
+}
+async function saveOp(tab,secId){
+  const sd=allData[curSchool]||(allData[curSchool]={});if(!sd.opinions)sd.opinions={};
+  const ta=document.getElementById('ota-'+secId);
+  if(!sd.opinions[secId])sd.opinions[secId]={};
+  sd.opinions[secId].text=ta?ta.value:'';
+  try{await apiPost({action:'saveOpinions',school:curSchool,opinions:sd.opinions});const el=document.getElementById('save-st-'+secId);if(el)el.textContent='저장됨 ✓';}
+  catch(e){const el=document.getElementById('save-st-'+secId);if(el)el.textContent='저장 실패 ⚠';}
+}
+
+function applyAll(){
+  if(!curSchool)return;
+  const sd=allData[curSchool]||{};const checks=sd.checks||{},judges=sd.judges||{},opinions=sd.opinions||{};
+  ['reg','plan'].forEach(tab=>{
+    DATA[tab].sections.forEach(sec=>{
+      sec.items.forEach(item=>{setCbUI(item.id,!!checks[item.id]);setJudgeUI(item.id,judges[item.id]||null);});
+      const ta=document.getElementById('ota-'+sec.id);if(ta)ta.value=(opinions[sec.id]||{}).text||'';
+    });updateTabStats(tab);
+  });
+  renderSubjectList();
+}
+function setCbUI(id,on){const t=document.getElementById('cit-'+id);if(t)t.className='ci-text'+(on?' done':'');}
+function setJudgeUI(id,val){
+  const ok=document.getElementById('jbtn-ok-'+id);const req=document.getElementById('jbtn-req-'+id);
+  if(ok)ok.className='jbtn ok'+(val==='ok'?' sel-ok':'');if(req)req.className='jbtn req'+(val==='req'?' sel-req':'');
+}
+function updateTabStats(tab){
+  if(tab==='plan') return; // plan은 참고용
+  const sd=allData[curSchool]||{};const checks=sd.checks||{},judges=sd.judges||{};
+  let total=0,done=0,ok=0,req=0;
+  DATA[tab].sections.forEach(sec=>{
+    let st=0,sd2=0,rok=0,rreq=0;
+    sec.items.forEach(item=>{total++;st++;if(checks[item.id]){done++;sd2++;}const j=judges[item.id];if(j==='ok'){ok++;rok++;}else if(j==='req'){req++;rreq++;}});
+    const cEl=document.getElementById('sec-cnt-'+sec.id);if(cEl)cEl.textContent=sd2+'/'+st;
+    const mEl=document.getElementById('sec-mini-'+sec.id);
+    if(mEl){let ms='';if(rok>0)ms+=`<span class="badge ok" style="font-size:11px">${rok}</span>`;if(rreq>0)ms+=`<span class="badge req" style="font-size:11px">${rreq}</span>`;mEl.innerHTML=ms;}
+  });
+  ['total','done','ok','req'].forEach((k,i)=>{const el=document.getElementById('st-'+k+'-'+tab);if(el)el.textContent=[total,done,ok,req][i];});
+}
+function updateProgress(){
+  const sd=allData[curSchool]||{};const done=Object.values(sd.checks||{}).filter(Boolean).length;
+  const pct=Math.round(done/TOTAL*100);
+  const fill=document.getElementById('hd-fill');if(fill)fill.style.width=pct+'%';
+  const pEl=document.getElementById('hd-pct');if(pEl)pEl.textContent=pct+'%';
+  document.getElementById('ck-sub').textContent=done+'/'+TOTAL+' 항목 확인 완료';
+}
+
+/* ── 종합 결과 ── */
+function renderResult(){
+  const pane=document.getElementById('pane-result');
+  const sd=allData[curSchool]||{};const checks=sd.checks||{},judges=sd.judges||{},opinions=sd.opinions||{};
+  const subjects=sd.subjects||[];
+  const reqItems=[];
+  let rows='';
+
+  // reg만 표에 표시
+  DATA['reg'].sections.forEach(sec=>{
+    const opText=(opinions[sec.id]||{}).text||'';
+    rows+=`<tr class="group-row"><td colspan="4">학업성적관리규정 — ${sec.title}</td></tr>`;
+    sec.items.forEach(item=>{
+      const j=judges[item.id];if(j==='req')reqItems.push({tab:'학업성적관리규정',sec:sec.title,text:item.text});
+      const badge=j==='ok'?'<span class="badge ok" style="font-size:14px;padding:5px 14px">적합</span>':j==='req'?'<span class="badge req" style="font-size:14px;padding:5px 14px">수정 요청</span>':'<span class="badge none" style="font-size:14px;padding:5px 14px">—</span>';
+      rows+=`<tr><td style="font-size:14px;color:var(--ink3);text-align:center">학업성적관리규정</td><td style="font-size:16px">${item.text}</td><td class="center" style="color:${checks[item.id]?'var(--green)':'var(--ink3)'};font-weight:700;font-size:20px">${checks[item.id]?'✓':'○'}</td><td class="center">${badge}</td></tr>`;
+    });
+    if(opText)rows+=`<tr><td colspan="4" style="background:#e8f0fe;font-size:15px;padding:12px 20px;color:var(--blue-deep)">💬 <b>검토 의견:</b> ${opText}</td></tr>`;
+  });
+
+  // plan은 과목별 의견으로 대체
+  let subjRows='';
+  if(subjects.length>0){
+    subjects.forEach(s=>{
+      subjRows+=`<tr><td style="font-size:15px;font-weight:700;color:var(--ink2)">${s.name||'(과목명 없음)'}</td>
+        <td style="font-size:15px;color:var(--ink);white-space:pre-wrap">${s.text||'—'}</td></tr>`;
+    });
+  } else {
+    subjRows=`<tr><td colspan="2" style="text-align:center;color:var(--ink3);font-size:14px;padding:24px">과목별 검토 의견이 없습니다</td></tr>`;
+  }
+
+  let reqBox='';
+  if(reqItems.length>0){reqBox=`<div class="req-summary"><div class="req-summary-hd">🔴 수정 요청 항목 (${reqItems.length}건)</div>${reqItems.map((it,i)=>`<div class="req-item"><span class="req-num">${i+1}.</span><div><span style="font-size:14px;color:var(--red);display:block;font-weight:600">${it.tab} › ${it.sec}</span>${it.text}</div></div>`).join('')}</div>`;}
+
+  pane.innerHTML=`<h3 style="font-size:19px;font-weight:700;letter-spacing:-.01em;margin-bottom:20px">종합 점검 결과 — ${curSchool}</h3>
+  ${reqBox}
+  <table class="result-tbl" style="margin-bottom:24px">
+    <thead><tr><th style="width:200px;text-align:center">구분</th><th style="width:900px">점검 항목</th><th class="center" style="width:100px">확인</th><th class="center" style="width:200px">판정</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div style="background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);overflow:hidden">
+    <div style="background:#1e3a6e;color:#fff;padding:16px 22px;font-size:18px;font-weight:700">교과별 평가계획 — 과목별 검토 의견</div>
+    <table class="result-tbl">
+      <thead><tr><th style="width:200px">과목명</th><th>점검 결과</th></tr></thead>
+      <tbody>${subjRows}</tbody>
+    </table>
+  </div>`;
+}
+
+/* ── 검토 의견서 renderOpinionReport ── */
+function renderOpinionReport(){
+  const pane=document.getElementById('pane-opinion');
+  const sd=allData[curSchool]||{};
+  const opinions=sd.opinions||{}, judges=sd.judges||{}, meta=sd.meta||{};
+  const subjects=sd.subjects||[];
+
+  let html=`
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+    <div>
+      <h3 style="font-size:26px;font-weight:700;letter-spacing:-.01em">검토 의견서</h3>
+      <p style="font-size:16px;color:var(--ink3);margin-top:5px">학생평가 단위학교 현장 실태점검 환류 자료</p>
+    </div>
+    <div style="background:var(--cloud);border:2px solid var(--fog);border-radius:var(--r-md);padding:16px 24px;font-size:15px;line-height:2">
+      <div><span style="color:var(--ink3);font-weight:600;display:inline-block;width:60px">학교명</span><span style="font-weight:700">${curSchool}</span></div>
+      <div><span style="color:var(--ink3);font-weight:600;display:inline-block;width:60px">점검자</span><span>${meta.name||'—'}</span></div>
+      <div><span style="color:var(--ink3);font-weight:600;display:inline-block;width:60px">점검일</span><span>${meta.date||'—'}</span></div>
+    </div>
+  </div>`;
+
+  // ① 학업성적관리규정 — 섹션별 의견+판정 표
+  const regReq=DATA['reg'].sections.reduce((a,s)=>a+s.items.filter(it=>judges[it.id]==='req').length,0);
+  const regOk=DATA['reg'].sections.reduce((a,s)=>a+s.items.filter(it=>judges[it.id]==='ok').length,0);
+  html+=`<div style="background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:28px">
+    <div style="background:var(--blue-deep);color:#fff;padding:18px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:22px;font-weight:700">학업성적관리규정</div></div>
+      <div style="display:flex;gap:10px">
+        ${regOk>0?`<span class="badge ok" style="font-size:14px;padding:6px 16px">적합 ${regOk}건</span>`:''}
+        ${regReq>0?`<span class="badge req" style="font-size:14px;padding:6px 16px">수정 요청 ${regReq}건</span>`:''}
+      </div>
+    </div>
+    <table class="opinion-tbl">
+      <thead><tr><th style="width:280px">항목</th><th style="width:640px">검토 의견</th><th class="center" style="width:120px">판정</th><th style="width:360px">수정 요청 항목</th></tr></thead><tbody>`;
+
+  DATA['reg'].sections.forEach(sec=>{
+    const opText=(opinions[sec.id]||{}).text||'';
+    const secReq=sec.items.filter(it=>judges[it.id]==='req');
+    const secOk=sec.items.filter(it=>judges[it.id]==='ok');
+    const hasJudge=secOk.length>0||secReq.length>0;
+    html+=`<tr class="opinion-row">
+      <td><div class="op-sec-name">${sec.num}. ${sec.title}</div><div style="font-size:13px;color:var(--ink3);margin-top:4px">${sec.items.length}개 항목</div></td>
+      <td>${opText.trim()?`<div class="op-opinion-text">${opText.split('\n').join('<br>')}</div>`:`<div class="op-opinion-empty">입력된 의견 없음</div>`}</td>
+      <td class="op-judge-cell" style="vertical-align:middle">
+        ${secOk.length>0&&secReq.length===0?`<span class="badge ok" style="font-size:14px;padding:5px 14px">적합</span>`:''}
+        ${secReq.length>0&&secOk.length===0?`<span class="badge req" style="font-size:14px;padding:5px 12px;white-space:nowrap">수정</span>`:''}
+        ${secOk.length>0&&secReq.length>0?`<span class="badge ok" style="font-size:13px;padding:4px 10px;display:block;margin-bottom:4px">${secOk.length}</span><span class="badge req" style="font-size:13px;padding:4px 10px;display:block;white-space:nowrap">${secReq.length}</span>`:''}
+        ${!hasJudge?`<span class="badge none" style="font-size:13px">—</span>`:''}
+      </td>
+      <td style="padding:16px 18px;vertical-align:top">
+        ${secReq.length>0?secReq.map((it,i)=>`<div class="op-req-row"><span style="color:var(--red);font-weight:700;flex-shrink:0;min-width:22px">${i+1}.</span><span>${it.text}</span></div>`).join(''):`<span style="font-size:14px;color:var(--ink3)">—</span>`}
+      </td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+
+  // ② 교과별 평가계획 — 과목별 의견만
+  html+=`<div style="background:var(--canvas);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;margin-bottom:28px">
+    <div style="background:#1e3a6e;color:#fff;padding:18px 24px">
+      <div style="font-size:22px;font-weight:700">교과별 평가계획 — 과목별 검토 의견</div>
+      <div style="font-size:14px;opacity:.7;margin-top:3px">총 ${subjects.length}개 과목</div>
+    </div>
+    <table class="opinion-tbl">
+      <thead><tr><th style="width:200px">과목명</th><th>점검 결과 (검토 의견)</th></tr></thead>
+      <tbody>`;
+
+  if(subjects.length===0){
+    html+=`<tr><td colspan="2" style="padding:28px;text-align:center;color:var(--ink3);font-size:15px">교과별 평가계획 탭에서 과목을 추가하고 검토 의견을 입력해주세요.</td></tr>`;
+  } else {
+    subjects.forEach(s=>{
+      html+=`<tr class="opinion-row">
+        <td style="font-size:16px;font-weight:700;color:var(--ink2)">${s.name||'(과목명 없음)'}</td>
+        <td>${s.text&&s.text.trim()?`<div class="op-opinion-text">${s.text.split('\n').join('<br>')}</div>`:`<div class="op-opinion-empty">입력된 의견 없음</div>`}</td>
+      </tr>`;
+    });
+  }
+  html+=`</tbody></table></div>`;
+  pane.innerHTML=html;
+}
+async function resetSchool(){
+  if(!confirm(curSchool+'의 모든 점검 내역을 초기화할까요?'))return;
+  allData[curSchool]={checks:{},judges:{},opinions:{},subjects:[],meta:allData[curSchool]?.meta||{}};
+  applyAll();updateProgress();
+  try{await Promise.all([
+    apiPost({action:'saveChecks',school:curSchool,checks:{}}),
+    apiPost({action:'saveJudges',school:curSchool,judges:{}}),
+    apiPost({action:'saveOpinions',school:curSchool,opinions:{}}),
+    apiPost({action:'saveSubjects',school:curSchool,subjects:[]}),
+  ]);}catch(e){showErr();}
+  toast('초기화되었습니다');
+}
+function showErr(){document.getElementById('err-banner').style.display='block';setTimeout(()=>{document.getElementById('err-banner').style.display='none';},5000);}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(()=>t.className='toast',2200);}
+
+(async()=>{
+  initEntry();
+  try{ await loadAll(false); }catch(e){ allData={}; }
+  document.getElementById('loading').style.display='none';
+  showOnly('entry-screen');
+  setInterval(()=>{ loadAll(false); },30000);
+})();
+</script>
+</body>
+</html>
