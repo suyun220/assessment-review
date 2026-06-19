@@ -524,7 +524,7 @@ button,input,textarea,select{font-family:inherit}
 <div class="toast" id="toast"></div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxDpgfWhTCNf8WyljOjOI35vd2byrE0jaws1JSS-YbemDDrPsP5FahBmZCfyN-J5P6P/exec";
+const API_URL = "YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 const ADMIN_PW = "wndemd6cmd";
 
 const SCHOOLS = ["천안제일고등학교","천안공업고등학교","천안중앙고등학교","천안여자고등학교","병천고등학교","충남관광보건고등학교","목천고등학교","충남예술고등학교","천안두정고등학교","천안월봉고등학교","천안쌍용고등학교","천안신당고등학교","천안오성고등학교","천안업성고등학교","천안청수고등학교","천안불당고등학교","천안고등학교","천안상업고등학교","복자여자고등학교","천안여자상업고등학교","북일고등학교","북일여자고등학교","공주대학교사범대학부설고등학교","공주생명과학고등학교","공주고등학교","공주여자고등학교","충남과학고등학교","공주마이스터고등학교","공주영명고등학교","공주정보고등학교","공주금성여자고등학교","한일고등학교","대천고등학교","대천여자고등학교","대천여자상업고등학교","충남해양과학고등학교","웅천고등학교","주산산업고등학교","온양고등학교","온양여자고등학교","온양용화고등학교","아산스마트팩토리마이스터고등학교","충남외국어고등학교","설화고등학교","배방고등학교","이순신고등학교","아산충무고등학교","아산고등학교","한올고등학교","충남삼성고등학교","서산중앙고등학교","서산여자고등학교","대산고등학교","서산공업고등학교","서산고등학교","부석고등학교","서령고등학교","서일고등학교","국방항공고등학교","논산고등학교","논산여자고등학교","강경상업고등학교","강경고등학교","연무마이스터고등학교","한국국제비즈니스고등학교","충남체육고등학교","논산대건고등학교","연무고등학교","건양대학교병설건양고등학교","쌘뽈여자고등학교","논산여자상업고등학교","용남고등학교","계룡고등학교","당진정보고등학교","당진고등학교","합덕제철고등학교","합덕고등학교","호서고등학교","신평고등학교","서야고등학교","송악고등학교","금산산업고등학교","금산고등학교","금산여자고등학교","금산하이텍고등학교","부여고등학교","부여여자고등학교","부여정보고등학교","한국식품마이스터고등학교","부여전자고등학교","장항공업고등학교","서천고등학교","서천여자고등학교","충남디자인예술고등학교","한국미래문화고등학교","장항고등학교","비전고등학교","청양고등학교","정산고등학교","홍성고등학교","홍성여자고등학교","충남드론항공고등학교","갈산고등학교","홍성공업고등학교","홍주고등학교","한국K-POP고등학교","서해삼육고등학교","충남반도체마이스터고등학교","예산여자고등학교","덕산고등학교","예산고등학교","예산예화여자고등학교","풀무농업고등기술학교","대흥고등학교","삽교고등학교","충남온라인학교","태안고등학교","안면고등학교","만리포고등학교","태안여자고등학교"];
@@ -831,91 +831,112 @@ async function openModal(school){
   const pct=Math.round(doneCnt/TOTAL*100);
   document.getElementById('modal-title').textContent=school+' — 점검 결과 요약';
 
-  // reg만 수정요청 수집
+  // 수정요청 항목 섹션별 수집
   const reqBySec=[];
   DATA['reg'].sections.forEach(sec=>{
     const items=sec.items.filter(it=>judges[it.id]==='req');
-    if(items.length>0) reqBySec.push({label:'학업성적관리규정 › '+sec.title, items, opinion:(opinions[sec.id]||{}).text||''});
+    if(items.length>0) reqBySec.push({label:sec.title, items, opinion:(opinions[sec.id]||{}).text||''});
   });
 
-  const F='19.6px'; // 14×1.4
-  const F2='18.2px';
-  const F3='19.6px';
-
+  // 상단 요약 카드
   let html=`
   <div style="display:flex;gap:2px;background:var(--fog);border-radius:var(--r-md);overflow:hidden;margin-bottom:22px;align-items:stretch">
-    <div style="background:var(--canvas);padding:16px 20px;flex:0 0 auto;width:160px;display:flex;flex-direction:column;justify-content:center">
-      <div style="font-size:${F};font-weight:700;color:var(--ink3);margin-bottom:6px">점검자</div>
-      <div style="font-size:${F};font-weight:700;color:var(--ink)">${meta.name||'—'}</div>
+    <div style="background:var(--canvas);padding:14px 18px;flex:0 0 auto;width:150px;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:12px;font-weight:700;color:var(--ink3);margin-bottom:5px">점검자</div>
+      <div style="font-size:16px;font-weight:700">${meta.name||'—'}</div>
     </div>
-    <div style="background:var(--canvas);padding:16px 20px;flex:1;display:flex;flex-direction:column;justify-content:center">
-      <div style="font-size:${F};font-weight:700;color:var(--ink3);margin-bottom:6px">점검일시</div>
-      <div style="font-size:${F};font-weight:600;color:var(--ink)">${meta.date||'—'}</div>
+    <div style="background:var(--canvas);padding:14px 18px;flex:1;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:12px;font-weight:700;color:var(--ink3);margin-bottom:5px">점검일시</div>
+      <div style="font-size:15px;font-weight:600">${meta.date||'—'}</div>
     </div>
-    <div style="background:var(--canvas);padding:16px 24px;flex:0 0 auto;width:180px;display:flex;flex-direction:column;justify-content:center;border-left:2px solid var(--fog)">
-      <div style="font-size:${F};font-weight:700;color:var(--ink3);margin-bottom:6px">진행률</div>
-      <div style="font-size:28px;font-weight:700;color:var(--blue);line-height:1">${pct}%</div>
-      <div style="font-size:${F2};color:var(--ink3);margin-top:4px">${doneCnt} / ${TOTAL} 항목</div>
+    <div style="background:var(--canvas);padding:14px 20px;flex:0 0 auto;width:160px;display:flex;flex-direction:column;justify-content:center;border-left:2px solid var(--fog)">
+      <div style="font-size:12px;font-weight:700;color:var(--ink3);margin-bottom:5px">진행률</div>
+      <div style="font-size:26px;font-weight:700;color:var(--blue);line-height:1">${pct}%</div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:3px">${doneCnt} / ${TOTAL}</div>
     </div>
-    <div style="background:var(--canvas);padding:16px 24px;flex:0 0 auto;display:flex;align-items:center;gap:20px;border-left:2px solid var(--fog)">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <div style="font-size:${F};font-weight:700;color:var(--green);margin-bottom:6px">적합</div>
-        <div style="font-size:26px;font-weight:700;color:var(--green);line-height:1">${okCnt}<span style="font-size:${F2};margin-left:2px">건</span></div>
+    <div style="background:var(--canvas);padding:14px 20px;flex:0 0 auto;display:flex;align-items:center;gap:18px;border-left:2px solid var(--fog)">
+      <div style="text-align:center">
+        <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:5px">✅ 적합</div>
+        <div style="font-size:24px;font-weight:700;color:var(--green)">${okCnt}<span style="font-size:13px">건</span></div>
       </div>
-      <div style="width:1px;height:44px;background:var(--fog)"></div>
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <div style="font-size:${F};font-weight:700;color:var(--red);margin-bottom:6px;white-space:nowrap">수정 요청</div>
-        <div style="font-size:26px;font-weight:700;color:var(--red);line-height:1">${reqCnt}<span style="font-size:${F2};margin-left:2px">건</span></div>
+      <div style="width:1px;height:40px;background:var(--fog)"></div>
+      <div style="text-align:center">
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:5px">🔴 수정 요청</div>
+        <div style="font-size:24px;font-weight:700;color:var(--red)">${reqCnt}<span style="font-size:13px">건</span></div>
       </div>
     </div>
   </div>`;
 
+  // ① 수정 요청 항목 표
   if(reqBySec.length>0){
-    html+=`<div style="background:var(--red-bg);border:2px solid var(--red-border);border-radius:var(--r-md);padding:20px 24px;margin-bottom:20px">
-      <div style="font-size:${F3};font-weight:700;color:var(--red);margin-bottom:16px">🔴 수정 요청 항목 (${reqCnt}건)</div>`;
+    html+=`<div style="background:var(--canvas);border-radius:var(--r-md);overflow:hidden;margin-bottom:18px;border:1.5px solid var(--red-border)">
+      <div style="background:var(--red-bg);padding:12px 20px;font-size:15px;font-weight:700;color:var(--red);border-bottom:1.5px solid var(--red-border)">🔴 수정 요청 항목 (${reqCnt}건)</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--cloud)">
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:left;border-bottom:1px solid var(--fog);width:160px;white-space:nowrap">섹션</th>
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:left;border-bottom:1px solid var(--fog)">수정 요청 항목</th>
+        </tr></thead>
+        <tbody>`;
     reqBySec.forEach(({label,items,opinion})=>{
-      html+=`<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px dashed var(--red-border)">
-        <div style="font-size:${F2};font-weight:700;color:var(--red);margin-bottom:8px">${label}</div>
-        ${items.map((it,i)=>`<div style="display:flex;gap:10px;padding:6px 0;font-size:${F};align-items:flex-start;border-bottom:1px dotted rgba(192,57,43,.15)"><span style="color:var(--red);font-weight:700;flex-shrink:0;min-width:22px">${i+1}.</span><span>${it.text}</span></div>`).join('')}
-        ${opinion?`<div style="margin-top:10px;padding:10px 14px;background:rgba(255,255,255,.65);border-radius:var(--r-sm);font-size:${F2};color:#7f2020;line-height:1.6"><b>💬 검토 의견:</b> ${opinion}</div>`:''}
-      </div>`;
+      html+=`<tr style="border-bottom:1px solid var(--fog)">
+        <td style="padding:12px 16px;font-size:14px;font-weight:700;color:var(--red);vertical-align:top;white-space:nowrap">${label}</td>
+        <td style="padding:12px 16px;font-size:15px;color:var(--ink);line-height:1.7">
+          ${items.map(it=>`<div style="padding:3px 0;word-break:keep-all">• ${it.text}</div>`).join('')}
+          ${opinion?`<div style="margin-top:8px;padding:8px 12px;background:#fff0f0;border-radius:4px;font-size:14px;color:#7f2020;line-height:1.65;word-break:keep-all">💬 ${opinion}</div>`:''}
+        </td>
+      </tr>`;
     });
-    html+=`</div>`;
+    html+=`</tbody></table></div>`;
   } else {
-    html+=`<div style="background:var(--green-bg);border:2px solid var(--green-border);border-radius:var(--r-md);padding:16px 24px;margin-bottom:20px;font-size:${F};color:var(--green);font-weight:600">✅ 수정 요청 항목 없음</div>`;
+    html+=`<div style="background:var(--green-bg);border:1.5px solid var(--green-border);border-radius:var(--r-md);padding:14px 20px;margin-bottom:18px;font-size:15px;color:var(--green);font-weight:600">✅ 수정 요청 항목 없음</div>`;
   }
 
-  // reg 섹션별 검토 의견
-  let opRows='';
-  DATA['reg'].sections.forEach(sec=>{
-    const op=(opinions[sec.id]||{}).text||'';
-    const secOk=sec.items.filter(it=>judges[it.id]==='ok').length;
-    const secReq=sec.items.filter(it=>judges[it.id]==='req').length;
-    if(!op.trim()) return;
-    opRows+=`<div style="padding:13px 0;border-bottom:1px solid var(--fog)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;flex-wrap:wrap;gap:6px">
-        <span style="font-size:${F};font-weight:700;color:var(--ink2)">학업성적관리규정 › ${sec.title}</span>
-        <div style="display:flex;gap:5px">${secOk>0?`<span class="badge ok" style="font-size:${F2}">✅ ${secOk}</span>`:''} ${secReq>0?`<span class="badge req" style="font-size:${F2}">🔴 ${secReq}</span>`:''}</div>
-      </div>
-      <div style="font-size:${F};color:var(--ink);line-height:1.7;white-space:pre-wrap">${op}</div>
-    </div>`;
-  });
-  if(opRows){
-    html+=`<div style="background:var(--canvas);border:2px solid var(--fog);border-radius:var(--r-md);padding:20px 24px;margin-bottom:20px">
-      <div style="font-size:${F3};font-weight:700;color:var(--ink2);margin-bottom:12px">💬 학업성적관리규정 검토 의견</div>${opRows}</div>`;
-  }
-
-  // 과목별 의견
-  if(subjects.length>0){
-    html+=`<div style="background:var(--canvas);border:2px solid var(--fog);border-radius:var(--r-md);padding:20px 24px">
-      <div style="font-size:${F3};font-weight:700;color:var(--ink2);margin-bottom:14px">📋 교과별 평가계획 — 과목별 검토 의견</div>`;
-    subjects.forEach(s=>{
-      html+=`<div style="padding:12px 0;border-bottom:1px solid var(--fog)">
-        <div style="font-size:${F};font-weight:700;color:var(--ink2);margin-bottom:6px">${s.name||'(과목명 없음)'}</div>
-        <div style="font-size:${F2};color:var(--ink);line-height:1.7;white-space:pre-wrap">${s.text&&s.text.trim()?s.text:'—'}</div>
-      </div>`;
+  // ② 학업성적관리규정 검토 의견 표
+  const regOps=DATA['reg'].sections.filter(sec=>(opinions[sec.id]||{}).text);
+  if(regOps.length>0){
+    html+=`<div style="background:var(--canvas);border-radius:var(--r-md);overflow:hidden;margin-bottom:18px;border:1.5px solid var(--fog)">
+      <div style="background:var(--blue-deep);padding:12px 20px;font-size:15px;font-weight:700;color:#fff">💬 학업성적관리규정 검토 의견</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--cloud)">
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:left;border-bottom:1px solid var(--fog);width:160px;white-space:nowrap">섹션</th>
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:left;border-bottom:1px solid var(--fog)">검토 의견</th>
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:center;border-bottom:1px solid var(--fog);width:90px;white-space:nowrap">판정</th>
+        </tr></thead>
+        <tbody>`;
+    DATA['reg'].sections.forEach(sec=>{
+      const op=(opinions[sec.id]||{}).text||'';
+      if(!op.trim()) return;
+      const secOk=sec.items.filter(it=>judges[it.id]==='ok').length;
+      const secReq=sec.items.filter(it=>judges[it.id]==='req').length;
+      html+=`<tr style="border-bottom:1px solid var(--fog)">
+        <td style="padding:12px 16px;font-size:14px;font-weight:700;color:var(--ink2);vertical-align:top;white-space:nowrap">${sec.title}</td>
+        <td style="padding:12px 16px;font-size:15px;color:var(--ink);line-height:1.75;word-break:keep-all;white-space:pre-wrap">${op}</td>
+        <td style="padding:12px 16px;text-align:center;vertical-align:top">
+          ${secOk>0?`<span class="badge ok" style="font-size:12px;display:block;margin-bottom:4px">✅ ${secOk}</span>`:''}
+          ${secReq>0?`<span class="badge req" style="font-size:12px;display:block">🔴 ${secReq}</span>`:''}
+        </td>
+      </tr>`;
     });
-    html+=`</div>`;
+    html+=`</tbody></table></div>`;
+  }
+
+  // ③ 과목별 검토 의견 표
+  if(subjects.length>0){
+    html+=`<div style="background:var(--canvas);border-radius:var(--r-md);overflow:hidden;border:1.5px solid var(--fog)">
+      <div style="background:#1e3a6e;padding:12px 20px;font-size:15px;font-weight:700;color:#fff">📋 교과별 평가계획 — 과목별 검토 의견</div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--cloud)">
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:left;border-bottom:1px solid var(--fog);width:130px;white-space:nowrap">과목명</th>
+          <th style="padding:10px 16px;font-size:13px;font-weight:700;color:var(--ink3);text-align:left;border-bottom:1px solid var(--fog)">검토 의견</th>
+        </tr></thead>
+        <tbody>`;
+    subjects.forEach(s=>{
+      html+=`<tr style="border-bottom:1px solid var(--fog)">
+        <td style="padding:12px 16px;font-size:15px;font-weight:700;color:var(--ink2);vertical-align:top;white-space:nowrap">${s.name||'—'}</td>
+        <td style="padding:12px 16px;font-size:15px;color:var(--ink);line-height:1.75;word-break:keep-all;white-space:pre-wrap">${s.text&&s.text.trim()?s.text:'—'}</td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
   }
 
   document.getElementById('modal-body').innerHTML=html;
